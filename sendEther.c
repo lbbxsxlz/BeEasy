@@ -77,14 +77,14 @@ char* getMacFromArp(const char* req_ip)
  *      0 if success, -1 if error.
  **/
  
-int macAton(const char *a, unsigned char *n) {
+int macAton(const char* a, unsigned char *n) {
     int matches = sscanf(a, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx", n, n+1, n+2,
                          n+3, n+4, n+5);
 
     return (6 == matches ? 0 : -1);
 }
 
-int getLocalNetInfo(char const *iface, int s, int* if_index, char* mac)
+int getLocalNetInfo(const char* iface, int s, int* if_index, char* mac)
 {
     // create socket if needed(fd is not given)
     int ret = -1;
@@ -124,7 +124,7 @@ cleanup:
     return ret;
 }
 
-int createEtherSocket(char const *iface)
+int createEtherSocket(const char* iface)
 {
     int sfd = -1;
     int ret = -1;
@@ -152,7 +152,7 @@ int createEtherSocket(char const *iface)
     return sfd;
 }
 
-int sendEtherData(int s, char* to, short type, char const *data)
+int sendEtherData(int s, char* to, short type, const char* data)
 {
     int ret = -1;
     // construct ethernet frame, which can be 1514 bytes at most
