@@ -189,7 +189,7 @@ int sendEtherData(int s, char* to, short type, const char* data)
 
 int main(int argc, char *argv[]) 
 {
-    int sfd;
+    int sfd = -1;
     unsigned char to[6];
     char* dstMac = NULL;
     //short type;
@@ -203,13 +203,14 @@ int main(int argc, char *argv[])
     dstMac = getMacFromArp(argv[2]);
     if (NULL == dstMac) {
     	fprintf(stderr, "Fail to get dest MAC address from ip %s \n", argv[2]);
-    	exit(-1);
+    	goto quit;
     }
     
     int ret = macAton(dstMac, to);
     if (0 != ret) {
         perror("Fail to mac aton \n");
-        exit(-1);
+        free(dstMac);
+        goto quit;
     }
 
     free(dstMac);
@@ -218,8 +219,11 @@ int main(int argc, char *argv[])
     ret = sendEtherData(sfd, to, TYPE, argv[3]);
     if (-1 == ret) {
         perror("Fail to send ethernet frame: ");
-        exit(-1);
+        goto quit;
     }
+    
+quit:
+    close(sfd);
 
     return 0;
 }
