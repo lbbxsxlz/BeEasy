@@ -13,10 +13,6 @@
 #define MAX_ETHERNET_DATA_SIZE 1500
 
 #define ETHERNET_HEADER_SIZE 14
-#define ETHERNET_DST_ADDR_OFFSET 0
-#define ETHERNET_SRC_ADDR_OFFSET 6
-#define ETHERNET_TYPE_OFFSET 12
-#define ETHERNET_DATA_OFFSET 14
 
 #define MAC_BYTES 6
 #define TYPE      0x1024
@@ -198,6 +194,12 @@ int main(int argc, char *argv[])
     char* dstMac = NULL;
     //short type;
 
+    sfd = createEtherSocket(argv[1]);
+    if (sfd < 0) {
+        perror("Fail to create Ether Socket \n");
+        exit(-1);
+    }
+
     dstMac = getMacFromArp(argv[2]);
     if (NULL == dstMac) {
     	fprintf(stderr, "Fail to get dest MAC address from ip %s \n", argv[2]);
@@ -211,14 +213,6 @@ int main(int argc, char *argv[])
     }
 
     free(dstMac);
-    
-    //sscanf(argv[3], "%hx", &type);
-
-    sfd = createEtherSocket(argv[1]);
-    if (sfd < 0) {
-        perror("Fail to create Ether Socket \n");
-        exit(-1);
-    }
 
     // send data
     ret = sendEtherData(sfd, to, TYPE, argv[3]);
