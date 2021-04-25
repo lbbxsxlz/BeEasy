@@ -11,31 +11,6 @@
 
 #include "ethernet.h"
 
-#define MAX_ETHERNET_FRAME_SIZE 1514
-#define MAX_ETHERNET_DATA_SIZE 1500
-
-#define ETHERNET_HEADER_SIZE 14
-
-#define MAC_BYTES 6
-
-/**
- * struct for an ethernet frame
- **/
-struct ethernet_frame {
-    // destination MAC address, 6 bytes
-    unsigned char dst_addr[6];
-
-    // source MAC address, 6 bytes
-    unsigned char src_addr[6];
-
-    // type, in network byte order
-    unsigned short type;
-
-    // data
-    unsigned char data[MAX_ETHERNET_DATA_SIZE];
-};
-
-
 char* getMacFromArp(const char* req_ip)
 {
     FILE *procFile;
@@ -63,7 +38,8 @@ char* getMacFromArp(const char* req_ip)
     return reply;
 }
  
-int macAton(const char* a, unsigned char *n) {
+int macAton(const char* a, unsigned char *n) 
+{
     int matches = sscanf(a, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx", n, n+1, n+2,
                          n+3, n+4, n+5);
 
@@ -176,48 +152,3 @@ int sendEtherData(int sfd, char* to, char* from, short type, const char* data)
     return 0;
 }
 
-int main(int argc, char *argv[]) 
-{
-    int sfd;
-    unsigned char from[6];
-    unsigned char to[6];
-    char* dstMac = NULL;
-
-    sfd = createEtherSocket(argv[1], TYPE);
-    if (sfd < 0) {
-        perror("Fail to create Ether Socket \n");
-        exit(-1);
-    }
-
-    if (getLocalMacAddr(argv[1], from) < 0) {
-		perror("Fail to get local mac address \n");
-		goto quit;
-    }
-
-    dstMac = getMacFromArp(argv[2]);
-    if (NULL == dstMac) {
-    	fprintf(stderr, "Fail to get dest MAC address from ip %s \n", argv[2]);
-    	goto quit;
-    }
-    
-    int ret = macAton(dstMac, to);
-    if (0 != ret) {
-        perror("Fail to mac aton \n");
-        free(dstMac);
-        goto quit;
-    }
-
-    free(dstMac);
-
-    // send data
-    ret = sendEtherData(sfd, to, from, TYPE, argv[3]);
-    if (-1 == ret) {
-        perror("Fail to send ethernet frame: ");
-        goto quit;
-    }
-    
-quit:
-    close(sfd);
-
-    return 0;
-}
