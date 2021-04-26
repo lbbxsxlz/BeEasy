@@ -27,9 +27,13 @@ struct ethernet_frame {
 };
 
 int createEtherSocket(const char* iface, short proto);
-int getLocalMacAddr(const char* iface, char* mac);
+int getLocalMacAddr(const char* iface, unsigned char* mac);
+#if 0
 char* getMacFromArp(const char* req_ip);
+#else
+int getMacFromArp(const char* req_ip, char* macStr);
+#endif
 int macAton(const char* a, unsigned char *n);
-int sendEtherData(int sfd, char* to, char* from, short type, const char* data);
+int sendEtherData(int sfd, unsigned char* to, unsigned char* from, short type, const char* data);
 
 #endif

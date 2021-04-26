@@ -11,6 +11,7 @@
 
 #include "ethernet.h"
 
+#if 0
 char* getMacFromArp(const char* req_ip)
 {
     FILE *procFile;
@@ -29,14 +30,39 @@ char* getMacFromArp(const char* req_ip)
     reply = NULL;
     while (!feof(procFile) && (fscanf(procFile, " %15[0-9.] %*s %*s %17[A-Fa-f0-9:] %*s %*s", ip, mac) == 2)) {
         if (strcmp(ip, req_ip) == 0) {
-	    reply = strdup(mac);
-	    break;
-	}
+	        reply = strdup(mac);
+	        break;
+	    }
     }
  
     fclose(procFile);
     return reply;
 }
+#else 
+int getMacFromArp(const char* req_ip, char* macStr)
+{
+    FILE *procFile;
+    char ip[16];
+    char mac[18];
+ 
+    if (!(procFile = fopen("/proc/net/arp", "r"))) {
+        return -1;
+    }
+ 
+    /* Skip first line */
+    while (!feof(procFile) && fgetc(procFile) != '\n');
+ 
+    while (!feof(procFile) && (fscanf(procFile, " %15[0-9.] %*s %*s %17[A-Fa-f0-9:] %*s %*s", ip, mac) == 2)) {
+        if (strcmp(ip, req_ip) == 0) {
+	        strcpy(macStr, mac);
+	        break;
+	    }
+    }
+ 
+    fclose(procFile);
+    return 0;
+}
+#endif
  
 int macAton(const char* a, unsigned char *n) 
 {
@@ -71,7 +97,7 @@ int getIfindex(const char* iface, int* ifindex)
 }
 
 
-int getLocalMacAddr(const char* iface, char* mac)
+int getLocalMacAddr(const char* iface, unsigned char* mac)
 {
 	int fd = -1;
 	struct ifreq ifr;
@@ -125,7 +151,7 @@ int createEtherSocket(const char* iface, short proto)
     return sfd;
 }
 
-int sendEtherData(int sfd, char* to, char* from, short type, const char* data)
+int sendEtherData(int sfd, unsigned char* to, unsigned char* from, short type, const char* data)
 {
     int ret = -1;
     struct ethernet_frame frame;
