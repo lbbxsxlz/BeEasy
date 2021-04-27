@@ -34,6 +34,6 @@ char* getMacFromArp(const char* req_ip);
 int getMacFromArp(const char* req_ip, char* macStr);
 #endif
 int macAton(const char* a, unsigned char *n);
-int sendEtherData(int sfd, unsigned char* to, unsigned char* from, short type, const char* data);
+int sendEtherData(int sfd, unsigned char* to, unsigned char* from, short type, const char* data, int data_size);
 
 #endif

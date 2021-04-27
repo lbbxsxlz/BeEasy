@@ -151,7 +151,7 @@ int createEtherSocket(const char* iface, short proto)
     return sfd;
 }
 
-int sendEtherData(int sfd, unsigned char* to, unsigned char* from, short type, const char* data)
+int sendEtherData(int sfd, unsigned char* to, unsigned char* from, short type, const char* data, int data_size)
 {
     int ret = -1;
     struct ethernet_frame frame;
@@ -160,12 +160,11 @@ int sendEtherData(int sfd, unsigned char* to, unsigned char* from, short type, c
     memcpy(frame.src_addr, from, MAC_BYTES);
     frame.type = htons(type);
 
-    int data_size = strlen(data);
+    memcpy(frame.data, data, data_size);
+
     if (data_size > MAX_ETHERNET_DATA_SIZE) {
         data_size = MAX_ETHERNET_DATA_SIZE;
     }
-
-    memcpy(frame.data, data, data_size);
 
     int frame_size = ETHERNET_HEADER_SIZE + data_size;
 

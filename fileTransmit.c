@@ -3,8 +3,27 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <libgen.h>
+
+#define MAXLEN 128
+
+struct fileData {
+	unsigned int count;
+	unsigned crc;
+	char context[];
+};
+
+char filename[MAXLEN] = {0};
+char filepath[MAXLEN] = {0};
+
+static void usage(char *path)
+{
+    fprintf(stderr, "%s -c -i <iface> -t <ip> -f <filename> -p <path> \n", basename(path));
+    fprintf(stderr, "%s -s -i <iface> \n", basename(path));
+}
 
 
+#if 0
 int main(int argc, char *argv[]) 
 {
     int sfd;
@@ -39,13 +58,9 @@ int main(int argc, char *argv[])
     int ret = macAton(dstMac, to);
     if (0 != ret) {
         perror("Fail to mac aton \n");
-        //free(dstMac);
         goto quit;
     }
 
-    //free(dstMac);
-
-    // send data
     ret = sendEtherData(sfd, to, from, TYPE, argv[3]);
     if (-1 == ret) {
         perror("Fail to send ethernet frame: ");
@@ -54,6 +69,58 @@ int main(int argc, char *argv[])
     
 quit:
     close(sfd);
+}
+#endif
 
+int fileSend(const char* iface, const char* dst)
+{
+
+}
+
+int fileRecv(const char* iface)
+{
+	
+}
+
+int main(int argc, char * argv[])
+{
+    int opt;
+    unsigned int isclent = 0;
+    char iface[10] = {0};
+    char ip[16] = {0};
+	
+    while ((opt = getopt(argc, argv, "f:p:t:i:cs")) != -1) {
+        switch (opt) {
+           case 's':
+               isclent = 0;
+               break;
+           case 'c':
+               isclent = 1;
+               break;
+           case 'i':
+               strncpy(iface, optarg, sizeof(iface) - 1);
+               break;
+           case 't':
+               strncpy(ip, optarg, sizeof(ip) - 1);
+               break;
+           case 'f':
+               strncpy(filename, optarg, sizeof(filename) - 1);
+               break;
+           case 'p':
+               strncpy(filepath, optarg, sizeof(filepath) - 1);
+               break;
+
+           default:
+               usage(argv[0]);
+        }
+    }
+
+    if (isclent) {
+		return fileSend(iface, ip);
+    }
+    else {
+		return fileRecv(iface);
+    }
+    
     return 0;
 }
