@@ -7,7 +7,6 @@
 #define ETHERNET_HEADER_SIZE 14
 
 #define MAC_BYTES 6
-#define TYPE 0x1024
 
 /**
  * struct for an ethernet frame
