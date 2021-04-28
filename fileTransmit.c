@@ -183,11 +183,6 @@ int main(int argc, char * argv[])
                exit(-1);
         }
     }
-
-    if (opt = -1) {
-        usage(argv[0]);
-        exit(-1);
-    }
     
     sfd = createEtherSocket(iface, FILETRANSMIT);
     if (sfd < 0) {
