@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <limits.h>
 #include <libgen.h>
 #include <arpa/inet.h>
 
@@ -33,7 +34,7 @@ char filepath[MAXLEN] = {0};
 
 static void usage(char *path)
 {
-    fprintf(stderr, "%s -c -i <iface> -t <ip> -f <filename> -p <path> \n", basename(path));
+    fprintf(stderr, "%s -c -i <iface> -t <ip> -f <filename> [-p <path>] \n", basename(path));
     fprintf(stderr, "%s -s -i <iface> \n", basename(path));
 }
 
@@ -148,14 +149,19 @@ int fileRecv(int fd)
 	return 0;
 }
 
-int main(int argc, char * argv[])
+int main(int argc, char ** argv)
 {
     int opt;
-    unsigned int isclent = 0;
+    int isclent = -1;
     char iface[10] = {0};
     char ip[16] = {0};
     int sfd = -1;
     int ret = 0;
+
+    if (argc < 2) {
+		usage(argv[0]);
+		exit(-1);
+    }
 	
     while ((opt = getopt(argc, argv, "f:p:t:i:cs")) != -1) {
         switch (opt) {
@@ -172,7 +178,7 @@ int main(int argc, char * argv[])
                strncpy(ip, optarg, sizeof(ip) - 1);
                break;
            case 'f':
-               strncpy(filename, optarg, sizeof(filename) - 1);
+               realpath(optarg, filename);
                break;
            case 'p':
                strncpy(filepath, optarg, sizeof(filepath) - 1);
@@ -183,7 +189,23 @@ int main(int argc, char * argv[])
                exit(-1);
         }
     }
-    
+
+    if (-1 == isclent || 0 == strlen(iface)) {
+		usage(argv[0]);
+		exit(-1);
+    }
+
+    if (isclent) {
+		if (0 == strlen(filename) || 0 == strlen(ip)) {
+			usage(argv[0]);
+			exit(-1);
+    	}
+
+    	if (0 == strlen(filepath)) {
+		    strncpy(filepath, dirname(filename), sizeof(filepath) - 1);
+        }
+    }
+
     sfd = createEtherSocket(iface, FILETRANSMIT);
     if (sfd < 0) {
         perror("Fail to create Ether Socket \n");
