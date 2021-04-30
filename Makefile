@@ -3,8 +3,8 @@
 # *
 # * Copyright (C) 2011-2013 ZheJiang Dahua Technology CO.,LTD.
 # *
-# * Author : li_binbin1 <li_binbin1@dahuatech.com>
-# * Version: V1.0.0   Created@2019年05月16日,上午10:46:48
+# * Author : lbbxsxlz <lbbxsxlz@gmail.com>
+# * Version: V1.0.0   Created@2021年04月16日,上午09:36:48
 # *
 # * Makefile for compiling fileTransmit
 # 
