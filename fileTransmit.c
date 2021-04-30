@@ -17,6 +17,7 @@
 
 struct fileAttr {
 	int status;
+	uint64_t fileSize;
 	char dstpath[MAXLEN];
 	char dstfileName[MAXLEN];
 };
@@ -31,6 +32,7 @@ struct fileData {
 
 char filename[MAXLEN] = {0};
 char filepath[MAXLEN] = {0};
+uint64_t fileSize;
 
 static void usage(char *path)
 {
@@ -87,12 +89,33 @@ quit:
     close(sfd);
 }
 #endif
+uint64_t htonll(uint64_t val)
+{
+	if (1 == htonl(1)) {
+		return val;
+	}
+
+	return ((uint64_t)htonl(val)) << 32 + htonl(val>>32);
+}
+
+uint64_t ntohll(uint64_t val)
+{
+	if (1 == htonl(1)) {
+		return val;
+	}
+
+	return ((uint64_t)ntohl(val)) << 32 + ntohl(val>>32);
+}
+
+
+
 
 int sendReq(int fd, unsigned char* to, unsigned char* from)
 {
 	struct fileAttr fattr;
     
     fattr.status = htonl(START);
+	fattr.fileSize = htonll(fileSize);
     strncpy(fattr.dstpath, filepath, MAXLEN -1);
     strncpy(fattr.dstfileName, basename(filename), MAXLEN -1);
 
@@ -106,7 +129,6 @@ int fileSend(int fd, const char* iface, const char* dstIp)
     char dstMac[18] = {0};
 
 	FILE* fp = NULL;
-	long size;
 
 	if (getLocalMacAddr(iface, from) < 0) {
 		perror("Fail to get local mac address \n");
@@ -122,14 +144,7 @@ int fileSend(int fd, const char* iface, const char* dstIp)
         perror("Fail to mac aton \n");
 		return -1;
     }
-
-    if (sendReq(fd, to, from) < 0) {
-		perror("Fail to send req \n");
-		return -1;
-    }
 	
-    return 0;
-/*
 	fp = fopen(filename, "r");
 	if (NULL == fp) {
 		fprintf(stderr, "Fail to open file %s \n", filename);
@@ -137,15 +152,39 @@ int fileSend(int fd, const char* iface, const char* dstIp)
 	}
 
 	fseek(fp, 0, SEEK_END);
-	size = ftell(fp);
+	fileSize = ftell(fp);
 	rewind(fp);
+
+	if (sendReq(fd, to, from) < 0) {
+		perror("Fail to send req \n");
+		return -1;
+    }
 	
 	return 0;
-*/	
+
 }
 
 int fileRecv(int fd)
 {
+    int ret;
+	short type;
+	int status;
+	struct ethernet_frame frame;
+	ret = recvfrom(sfd, &frame, sizeof(frame), 0, NULL, NULL);
+	if (ret < 0) {
+		perror("Fail to recv ether data");
+		return -1;
+	}
+
+	type = ntohs(frame.type);
+	if (type != FILETRANSMIT) {
+		perror("Recv invalid date \n");
+		return -1;
+	}
+
+	memcpy(status, frame.data, sizeof(status));
+	ststus = ntohl(status);
+	
 	return 0;
 }
 
