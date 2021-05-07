@@ -95,7 +95,7 @@ uint64_t htonll(uint64_t val)
 		return val;
 	}
 
-	return ((uint64_t)htonl(val)) << 32 + htonl(val>>32);
+	return (((uint64_t)htonl(val)) << 32) + htonl(val>>32);
 }
 
 uint64_t ntohll(uint64_t val)
@@ -104,7 +104,7 @@ uint64_t ntohll(uint64_t val)
 		return val;
 	}
 
-	return ((uint64_t)ntohl(val)) << 32 + ntohl(val>>32);
+	return (((uint64_t)ntohl(val)) << 32) + ntohl(val>>32);
 }
 
 
@@ -170,7 +170,7 @@ int fileRecv(int fd)
 	short type;
 	int status;
 	struct ethernet_frame frame;
-	ret = recvfrom(sfd, &frame, sizeof(frame), 0, NULL, NULL);
+	ret = recvfrom(fd, &frame, sizeof(frame), 0, NULL, NULL);
 	if (ret < 0) {
 		perror("Fail to recv ether data");
 		return -1;
@@ -182,8 +182,8 @@ int fileRecv(int fd)
 		return -1;
 	}
 
-	memcpy(status, frame.data, sizeof(status));
-	ststus = ntohl(status);
+	memcpy(&status, frame.data, sizeof(status));
+	status = ntohl(status);
 	
 	return 0;
 }
@@ -196,6 +196,7 @@ int main(int argc, char ** argv)
     char ip[16] = {0};
     int sfd = -1;
     int ret = 0;
+    char * str = NULL;
 
     if (argc < 2) {
 		usage(argv[0]);
@@ -217,7 +218,12 @@ int main(int argc, char ** argv)
                strncpy(ip, optarg, sizeof(ip) - 1);
                break;
            case 'f':
-               realpath(optarg, filename);
+               str = realpath(optarg, filename);
+	       if (!str) {
+			perror("realpath fail \n");
+			usage(argv[0]);
+			exit(-1);
+		}
                break;
            case 'p':
                strncpy(filepath, optarg, sizeof(filepath) - 1);
