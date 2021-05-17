@@ -108,8 +108,6 @@ uint64_t ntohll(uint64_t val)
 }
 
 
-
-
 int sendReq(int fd, unsigned char* to, unsigned char* from)
 {
 	struct fileAttr fattr;
@@ -184,6 +182,7 @@ int fileRecv(int fd)
 
 	memcpy(&status, frame.data, sizeof(status));
 	status = ntohl(status);
+	printf("status: 0x%x \n", status);
 	
 	return 0;
 }
@@ -194,6 +193,7 @@ int main(int argc, char ** argv)
     int isclent = -1;
     char iface[10] = {0};
     char ip[16] = {0};
+    char buf[PATH_MAX] = {0};
     int sfd = -1;
     int ret = 0;
     char * str = NULL;
@@ -205,33 +205,34 @@ int main(int argc, char ** argv)
 	
     while ((opt = getopt(argc, argv, "f:p:t:i:cs")) != -1) {
         switch (opt) {
-           case 's':
-               isclent = 0;
-               break;
-           case 'c':
-               isclent = 1;
-               break;
-           case 'i':
-               strncpy(iface, optarg, sizeof(iface) - 1);
-               break;
-           case 't':
-               strncpy(ip, optarg, sizeof(ip) - 1);
-               break;
-           case 'f':
-               str = realpath(optarg, filename);
-	       if (!str) {
-			perror("realpath fail \n");
-			usage(argv[0]);
-			exit(-1);
-		}
-               break;
-           case 'p':
-               strncpy(filepath, optarg, sizeof(filepath) - 1);
-               break;
+            case 's':
+                isclent = 0;
+                break;
+            case 'c':
+                isclent = 1;
+                break;
+            case 'i':
+                strncpy(iface, optarg, sizeof(iface) - 1);
+                break;
+            case 't':
+                strncpy(ip, optarg, sizeof(ip) - 1);
+                break;
+            case 'f':          
+                str = realpath(optarg, buf);
+	            if (!str) {
+			       perror("realpath fail \n");
+			       usage(argv[0]);
+			       exit(-1);
+		        }
+		  		strncpy(filename, str, sizeof(filename)-1);
+                break;
+            case 'p':
+                strncpy(filepath, optarg, sizeof(filepath) - 1);
+                break;
 
-           default:
-               usage(argv[0]);
-               exit(-1);
+            default:
+                usage(argv[0]);
+                exit(-1);
         }
     }
 
@@ -247,9 +248,12 @@ int main(int argc, char ** argv)
     	}
 
     	if (0 == strlen(filepath)) {
-		    strncpy(filepath, dirname(filename), sizeof(filepath) - 1);
+		    strncpy(filepath, filename, sizeof(filepath) - 1);
+		    printf("src filename: %s; dst path: %s.\n", filename, dirname(filepath));
         }
     }
+
+    //printf("htonll: 0x%lx, change: 0x%lx, change again \n", 0x00123456789A, htonll(0x00123456789A), ntohll(htonll(0x00123456789A)));
 
     sfd = createEtherSocket(iface, FILETRANSMIT);
     if (sfd < 0) {
