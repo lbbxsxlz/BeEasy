@@ -11,7 +11,7 @@
 /**
  * struct for an ethernet frame
  **/
-struct ethernet_frame {
+typedef struct ethernet_frame {
     // destination MAC address, 6 bytes
     unsigned char dst_addr[6];
 
@@ -23,7 +23,7 @@ struct ethernet_frame {
 
     // data
     unsigned char data[MAX_ETHERNET_DATA_SIZE];
-};
+} ethernetFrame_t;
 
 int createEtherSocket(const char* iface, short proto);
 int getLocalMacAddr(const char* iface, unsigned char* mac);

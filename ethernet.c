@@ -132,7 +132,7 @@ int createEtherSocket(const char* iface, short proto)
     if (-1 == sfd) {
         return -1;
     }
-
+    
     if (getIfindex(iface, &if_index) < 0) {
 		return -1;
     }
@@ -154,7 +154,7 @@ int createEtherSocket(const char* iface, short proto)
 int sendEtherData(int sfd, unsigned char* to, unsigned char* from, short type, const char* data, int data_size)
 {
     int ret = -1;
-    struct ethernet_frame frame;
+    ethernetFrame_t frame;
 
     memcpy(frame.dst_addr, to, MAC_BYTES);
     memcpy(frame.src_addr, from, MAC_BYTES);

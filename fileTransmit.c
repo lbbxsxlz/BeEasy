@@ -13,26 +13,30 @@
 #define END  0x0A
 #define ING  0x5A
 
-#define FILETRANSMIT 0x0512
+#define SUCCESS 0xE0
+#define FAIL    0xEE
 
-struct fileAttr {
+#define FILETRANSMIT 0x1024
+
+typedef struct fileAttr {
 	int status;
 	uint64_t fileSize;
 	char dstpath[MAXLEN];
 	char dstfileName[MAXLEN];
-};
+}fileAttr_t;
 
-struct fileData {
+typedef struct fileData {
 	int status;
 	unsigned int count;
 	unsigned int crc;
 	char context[1488];
-};
+}fileData_t;
 
 
 char filename[MAXLEN] = {0};
 char filepath[MAXLEN] = {0};
-uint64_t fileSize;
+uint64_t fileSize = 0;
+FILE* fp = NULL;
 
 static void usage(char *path)
 {
@@ -107,10 +111,40 @@ uint64_t ntohll(uint64_t val)
 	return (((uint64_t)ntohl(val)) << 32) + ntohl(val>>32);
 }
 
+int recvAck(int fd)
+{
+	int ret;
+	short type;
+    ethernetFrame_t frame;
+    int status;
+    
+	ret = recvfrom(fd, &frame, sizeof(frame), 0, NULL, NULL);
+	if (ret < 0) {
+		perror("Fail to recv ether data");
+		return -1;
+	}
+
+	type = ntohs(frame.type);
+	if (type != FILETRANSMIT) {
+		perror("Recv invalid date \n");
+		return -1;
+	}
+
+	memcpy(&status, frame.data, sizeof(status));
+	status = ntohl(status);
+	printf("status: 0x%x \n", status);
+
+	if (SUCCESS != status) {
+		printf("part exec fail \n");
+		return -1;
+	}
+
+	return 0;
+}
 
 int sendReq(int fd, unsigned char* to, unsigned char* from)
 {
-	struct fileAttr fattr;
+	fileAttr_t fattr;
     
     fattr.status = htonl(START);
 	fattr.fileSize = htonll(fileSize);
@@ -125,8 +159,7 @@ int fileSend(int fd, const char* iface, const char* dstIp)
 	unsigned char from[6];
     unsigned char to[6];
     char dstMac[18] = {0};
-
-	FILE* fp = NULL;
+    int ret = -1;
 
 	if (getLocalMacAddr(iface, from) < 0) {
 		perror("Fail to get local mac address \n");
@@ -151,15 +184,52 @@ int fileSend(int fd, const char* iface, const char* dstIp)
 
 	fseek(fp, 0, SEEK_END);
 	fileSize = ftell(fp);
+	printf("fileSzie= %llu \n", fileSize);
 	rewind(fp);
 
-	if (sendReq(fd, to, from) < 0) {
+	ret = sendReq(fd, to, from);
+	if (ret < 0) {
 		perror("Fail to send req \n");
-		return -1;
+		goto quit;
     }
-	
-	return 0;
 
+	ret = recvAck(fd);
+    if (ret < 0) {
+		perror("recvAck fail \n");
+		goto quit;
+    }
+    
+quit:	
+    fclose(fp);
+	return ret;
+
+}
+
+int sendAck(int fd, ethernetFrame_t* frame, int stat)
+{
+	return sendEtherData(fd, frame->src_addr, frame->dst_addr, FILETRANSMIT, (char*)&stat, sizeof(stat));
+}
+
+int createFile(ethernetFrame_t* frame)
+{
+	char fName[MAXLEN] = {0};
+
+	fileAttr_t fAttr;
+	memcpy(&fAttr, frame->data, sizeof(fAttr));
+	fileSize = ntohll(fAttr.fileSize);
+	
+	strncpy(filepath, fAttr.dstpath, MAXLEN - 1);
+	strncpy(fName, fAttr.dstfileName, MAXLEN - 1);
+	snprintf(filename, MAXLEN - 1, "%s%s", filepath, fName);
+
+	printf("file: %s, fileSize = %llu \n", filename, fileSize);
+	fp = fopen(filename, "a+");
+	if (NULL == fp) {
+		fprintf(stderr, "create file(%s) fail! \n", filename);
+		return -1;
+	}
+
+	return 0;
 }
 
 int fileRecv(int fd)
@@ -167,7 +237,7 @@ int fileRecv(int fd)
     int ret;
 	short type;
 	int status;
-	struct ethernet_frame frame;
+	ethernetFrame_t frame;
 	ret = recvfrom(fd, &frame, sizeof(frame), 0, NULL, NULL);
 	if (ret < 0) {
 		perror("Fail to recv ether data");
@@ -183,7 +253,20 @@ int fileRecv(int fd)
 	memcpy(&status, frame.data, sizeof(status));
 	status = ntohl(status);
 	printf("status: 0x%x \n", status);
-	
+
+	if (0x05 == status) {
+		ret = createFile(&frame);
+	}
+
+	if (ret < 0) {
+		sendAck(fd, &frame, htonl(FAIL));
+	}
+	else {
+		sendAck(fd, &frame, htonl(SUCCESS));
+	}
+
+	if (fp != NULL)
+		fclose(fp);
 	return 0;
 }
 
