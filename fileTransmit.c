@@ -28,8 +28,9 @@ typedef struct fileAttr {
 typedef struct fileData {
 	int status;
 	unsigned int count;
+	unsigned int len;
 	unsigned int crc;
-	char context[1488];
+	char context[1484];
 }fileData_t;
 
 
@@ -44,6 +45,44 @@ static void usage(char *path)
     fprintf(stderr, "%s -s -i <iface> \n", basename(path));
 }
 
+static unsigned int CRC32[256];
+static int init = 0;
+
+static void init_table()
+{
+    int   i,j;
+    unsigned int crc;
+    for(i = 0;i < 256;i++)
+    {
+        crc = i;
+        for(j = 0;j < 8;j++) {
+            if(crc & 1) {
+                 crc = (crc >> 1) ^ 0xEDB88320;
+            }
+            else {
+                 crc = crc >> 1;
+            }
+        }
+        CRC32[i] = crc;
+    }
+}
+
+static unsigned int crc32(char *buf, int len)
+{
+    unsigned int ret = 0xFFFFFFFF;
+    int  i;
+    if(!init) {
+         init_table();
+         init = 1;
+    }
+    
+    for(i = 0; i < len;i++) {
+         ret = CRC32[((ret & 0xFF) ^ buf[i])] ^ (ret >> 8);
+    }
+     
+	ret = ~ret;
+    return ret;
+}
 
 #if 0
 int main(int argc, char *argv[]) 
@@ -111,35 +150,44 @@ uint64_t ntohll(uint64_t val)
 	return (((uint64_t)ntohl(val)) << 32) + ntohl(val>>32);
 }
 
-int recvAck(int fd)
+int recvEtherFrame(int fd, ethernetFrame_t* frame)
 {
 	int ret;
 	short type;
-    ethernetFrame_t frame;
-    int status;
     
-	ret = recvfrom(fd, &frame, sizeof(frame), 0, NULL, NULL);
+	ret = recvfrom(fd, frame, sizeof(ethernetFrame_t), 0, NULL, NULL);
 	if (ret < 0) {
 		perror("Fail to recv ether data");
 		return -1;
 	}
 
-	type = ntohs(frame.type);
+	type = ntohs(frame->type);
 	if (type != FILETRANSMIT) {
 		perror("Recv invalid date \n");
 		return -1;
 	}
 
+	return 0;
+}
+
+
+int recvAck(int fd)
+{
+	int ret;
+    ethernetFrame_t frame;
+    int status;
+    
+	ret = recvEtherFrame(fd, &frame);
+	if (ret < 0) {
+		perror("recvEtherFrame fail \n");
+		return -1;
+	}
+	
 	memcpy(&status, frame.data, sizeof(status));
 	status = ntohl(status);
 	printf("status: 0x%x \n", status);
 
-	if (SUCCESS != status) {
-		printf("part exec fail \n");
-		return -1;
-	}
-
-	return 0;
+	return status;
 }
 
 int sendReq(int fd, unsigned char* to, unsigned char* from)
@@ -154,12 +202,53 @@ int sendReq(int fd, unsigned char* to, unsigned char* from)
     return sendEtherData(fd, to, from, FILETRANSMIT, (char*)&fattr, sizeof(fattr));
 }
 
+int sendFileData(int fd, unsigned char* to, unsigned char* from)
+{
+	char buf[1484];
+	fileData_t fData;
+	int readByte = -1;
+	unsigned int crc = 0;
+	unsigned count = 0;
+	int ret = -1;
+
+	while (!feof(fp)) {
+		memset(&fData, 0, sizeof(fData));
+		readByte = fread(buf, 1, sizeof(buf) -1, fp);
+		//crc = crc32(buf, readByte);
+
+		printf("readByte = %d, crc = 0x%x \n", readByte, crc);
+		
+		fData.status = htonl(ING);
+		fData.count = htonl(count);
+		fData.len = htonl(readByte);
+		fData.crc = htonl(crc);
+		memcpy(fData.context, buf, readByte);
+		
+		ret = sendEtherData(fd, to, from, FILETRANSMIT, (char*)&fData, sizeof(fData));
+		if (ret < 0) {
+			fprintf(stderr, "%s sendEther fail \n", __func__);
+			return -1;
+		}
+
+		ret = recvAck(fd);
+		if (ret != SUCCESS) {
+			fprintf(stderr,"%s recvAck fail \n", __func__);
+			return -1;
+		}
+
+		count++;
+	}
+
+	return 0;
+}
+
 int fileSend(int fd, const char* iface, const char* dstIp)
 {
 	unsigned char from[6];
     unsigned char to[6];
     char dstMac[18] = {0};
     int ret = -1;
+    int finish;
 
 	if (getLocalMacAddr(iface, from) < 0) {
 		perror("Fail to get local mac address \n");
@@ -194,15 +283,33 @@ int fileSend(int fd, const char* iface, const char* dstIp)
     }
 
 	ret = recvAck(fd);
-    if (ret < 0) {
+    if (ret != SUCCESS) {
 		perror("recvAck fail \n");
 		goto quit;
     }
-    
+
+    ret = sendFileData(fd, to, from);
+    if (ret < 0) {
+		perror("sendFileData fail \n");
+		goto quit;
+    }
+
+	finish = htonl(END);
+	ret = sendEtherData(fd, to, from, FILETRANSMIT, (char*)&finish, sizeof(finish));
+	if (ret < 0) {
+		perror("sendEtherData finish fail \n");
+		goto quit;
+    }
+
+    ret = recvAck(fd);
+    if (ret != SUCCESS) {
+		perror("recvAck fail \n");
+		goto quit;
+    }
+   
 quit:	
     fclose(fp);
 	return ret;
-
 }
 
 int sendAck(int fd, ethernetFrame_t* frame, int stat)
@@ -228,45 +335,100 @@ int createFile(ethernetFrame_t* frame)
 		fprintf(stderr, "create file(%s) fail! \n", filename);
 		return -1;
 	}
+#if 0
+	/* create a empty file */
+	if (fseek(fp, fileSize -1, SEEK_SET) < 0) {
+		fclose(fp);
+		return -1;
+	}
+
+	fputc('e', fp);
+	fclose(fp);
+#endif
+	return 0;
+}
+
+int recvFileData(ethernetFrame_t *frame)
+{
+	fileData_t fData;
+	char buf[1484] = {0};
+	unsigned count;
+	unsigned len;
+	unsigned int crc = 0;
+	unsigned int crcCalc = 0;
+	int writeByte;
+
+	memset(&fData, 0, sizeof(fData));
+	memcpy(&fData, frame->data, sizeof(fData));
+	count = ntohl(fData.count);
+	len = ntohl(fData.len);
+	crc = ntohl(fData.crc);
+
+	memcpy(buf, fData.context, len);
+
+	//crcCalc = crc32(buf, len);
+
+	printf("file size = %d, count = %d, crc = 0x%x, calcCrc = 0x%x \n", len, count, crc, crcCalc);
+	if (crcCalc != crc) {
+		perror("file data crc check fail \n");
+		return -1;
+	}
+
+	writeByte = fwrite(buf, 1, len, fp);
+	if (writeByte != len) {
+		perror("fwrite fail \n");
+	}
 
 	return 0;
 }
 
 int fileRecv(int fd)
 {
-    int ret;
-	short type;
-	int status;
+    int ret = -1;
 	ethernetFrame_t frame;
-	ret = recvfrom(fd, &frame, sizeof(frame), 0, NULL, NULL);
-	if (ret < 0) {
-		perror("Fail to recv ether data");
-		return -1;
-	}
+    int status;
+    unsigned int flag = 1;
 
-	type = ntohs(frame.type);
-	if (type != FILETRANSMIT) {
-		perror("Recv invalid date \n");
-		return -1;
-	}
+    while (flag) {
+		ret = recvEtherFrame(fd, &frame);
+		if (ret < 0) {
+			perror("recvEtherFrame fail \n");
+			return -1;
+		}
+		
+		memcpy(&status, frame.data, sizeof(status));
+		status = ntohl(status);
+		printf("status: 0x%x \n", status);
 
-	memcpy(&status, frame.data, sizeof(status));
-	status = ntohl(status);
-	printf("status: 0x%x \n", status);
+		switch (status) {
+			case START:
+				ret = createFile(&frame);
+				break;
+			case ING:
+				ret = recvFileData(&frame);
+				break;
 
-	if (0x05 == status) {
-		ret = createFile(&frame);
+			case END:
+				ret = fflush(fp);
+				flag = 0;
+				break;
+				
+			default:
+				perror("invalid status \n");
+				break;
+        }
+        if (ret < 0) {
+			sendAck(fd, &frame, htonl(FAIL));
+			goto quit;
+		} else {
+			sendAck(fd, &frame, htonl(SUCCESS));
+		}
+        usleep(1000);
 	}
-
-	if (ret < 0) {
-		sendAck(fd, &frame, htonl(FAIL));
-	}
-	else {
-		sendAck(fd, &frame, htonl(SUCCESS));
-	}
-
-	if (fp != NULL)
-		fclose(fp);
+quit:
+	if (fp)
+    	fclose(fp);
+	
 	return 0;
 }
 
