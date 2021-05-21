@@ -222,13 +222,13 @@ int sendFileData(int fd, unsigned char* to, unsigned char* from)
 			fprintf(stderr, "%s sendEther fail \n", __func__);
 			return -1;
 		}
-
+/*
 		ret = recvAck(fd);
 		if (ret != SUCCESS) {
 			fprintf(stderr,"%s recvAck fail \n", __func__);
 			return -1;
 		}
-
+*/
 		count++;
 	}
 
@@ -377,9 +377,10 @@ int recvFileData(ethernetFrame_t *frame)
 	writeByte = fwrite(buf, 1, len, fp);
 	if (writeByte != len) {
 		perror("fwrite fail \n");
+		return -1;
 	}
 
-	return 0;
+	return writeByte;
 }
 
 int fileRecv(int fd)
@@ -422,10 +423,10 @@ int fileRecv(int fd)
         if (ret < 0) {
 			sendAck(fd, &frame, htonl(FAIL));
 			goto quit;
-		} else {
+		} else if (0 == ret) {
 			sendAck(fd, &frame, htonl(SUCCESS));
 		}
-        usleep(100);
+        //usleep(100);
 	}
 quit:
 	if (fp)
