@@ -6,6 +6,7 @@
 #include <limits.h>
 #include <libgen.h>
 #include <arpa/inet.h>
+#include <time.h>
 
 
 #define MAXLEN 128
@@ -175,7 +176,7 @@ int recvAck(int fd)
 	
 	memcpy(&status, frame.data, sizeof(status));
 	status = ntohl(status);
-	printf("status: 0x%x \n", status);
+	//printf("status: 0x%x \n", status);
 
 	return status;
 }
@@ -208,7 +209,7 @@ int sendFileData(int fd, unsigned char* to, unsigned char* from)
 		readByte = fread(buf, 1, sizeof(buf) -1, fp);
 		crc = crc32(buf, readByte);
 
-		printf("readByte = %d, crc = 0x%x \n", readByte, crc);
+		//printf("readByte = %d, crc = 0x%x \n", readByte, crc);
 		
 		fData.status = htonl(ING);
 		fData.count = htonl(count);
@@ -241,6 +242,7 @@ int fileSend(int fd, const char* iface, const char* dstIp)
     char dstMac[18] = {0};
     int ret = -1;
     int finish;
+    time_t t_start, t_end;
 
 	if (getLocalMacAddr(iface, from) < 0) {
 		perror("Fail to get local mac address \n");
@@ -256,6 +258,8 @@ int fileSend(int fd, const char* iface, const char* dstIp)
         perror("Fail to mac aton \n");
 		return -1;
     }
+
+    t_start = time(NULL);
 	
 	fp = fopen(filename, "r");
 	if (NULL == fp) {
@@ -265,7 +269,7 @@ int fileSend(int fd, const char* iface, const char* dstIp)
 
 	fseek(fp, 0, SEEK_END);
 	fileSize = ftell(fp);
-	printf("fileSzie= %llu \n", fileSize);
+	//printf("fileSzie= %llu \n", fileSize);
 	rewind(fp);
 
 	ret = sendReq(fd, to, from);
@@ -298,6 +302,10 @@ int fileSend(int fd, const char* iface, const char* dstIp)
 		perror("recvAck fail \n");
 		goto quit;
     }
+
+    t_end = time(NULL);
+
+    printf("fileSize %llu, take %.0f secons \n", fileSize, difftime(t_end,t_start));
    
 quit:	
     fclose(fp);
@@ -359,7 +367,7 @@ int recvFileData(ethernetFrame_t *frame)
 	memcpy(buf, fData.context, len);
 	crcCalc = crc32(buf, len);
 
-	printf("file size = %d, count = %d, crc = 0x%x, calcCrc = 0x%x \n", len, count, crc, crcCalc);
+	//printf("file size = %d, count = %d, crc = 0x%x, calcCrc = 0x%x \n", len, count, crc, crcCalc);
 	
 	if (crcCalc != crc) {
 		perror("file data crc check fail \n");
@@ -417,7 +425,7 @@ int fileRecv(int fd)
 		} else {
 			sendAck(fd, &frame, htonl(SUCCESS));
 		}
-        usleep(1000);
+        usleep(100);
 	}
 quit:
 	if (fp)
@@ -488,7 +496,7 @@ int main(int argc, char ** argv)
 
     	if (0 == strlen(filepath)) {
 		    strncpy(filepath, filename, sizeof(filepath) - 1);
-		    printf("src filename: %s; dst path: %s.\n", filename, dirname(filepath));
+		    //printf("src filename: %s; dst path: %s.\n", filename, dirname(filepath));
         }
     }
 
