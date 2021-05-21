@@ -216,7 +216,7 @@ int sendFileData(int fd, unsigned char* to, unsigned char* from)
 		readByte = fread(buf, 1, sizeof(buf) -1, fp);
 		//crc = crc32(buf, readByte);
 
-		printf("readByte = %d, crc = 0x%x \n", readByte, crc);
+		//printf("readByte = %d, crc = 0x%x \n", readByte, crc);
 		
 		fData.status = htonl(ING);
 		fData.count = htonl(count);
@@ -369,11 +369,12 @@ int recvFileData(ethernetFrame_t *frame)
 	//crcCalc = crc32(buf, len);
 
 	printf("file size = %d, count = %d, crc = 0x%x, calcCrc = 0x%x \n", len, count, crc, crcCalc);
+/*	
 	if (crcCalc != crc) {
 		perror("file data crc check fail \n");
 		return -1;
 	}
-
+*/
 	writeByte = fwrite(buf, 1, len, fp);
 	if (writeByte != len) {
 		perror("fwrite fail \n");
