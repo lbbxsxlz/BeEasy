@@ -30,7 +30,7 @@ typedef struct fileData {
 	unsigned int count;
 	unsigned int len;
 	unsigned int crc;
-	char context[1484];
+	unsigned char context[1484];
 }fileData_t;
 
 
@@ -45,44 +45,34 @@ static void usage(char *path)
     fprintf(stderr, "%s -s -i <iface> \n", basename(path));
 }
 
-static unsigned int CRC32[256];
-static int init = 0;
-
-static void init_table()
-{
-    int   i,j;
-    unsigned int crc;
-    for(i = 0;i < 256;i++)
-    {
-        crc = i;
-        for(j = 0;j < 8;j++) {
-            if(crc & 1) {
-                 crc = (crc >> 1) ^ 0xEDB88320;
-            }
-            else {
-                 crc = crc >> 1;
-            }
-        }
-        CRC32[i] = crc;
-    }
+static unsigned int crcTable[256];
+static void initCrcTable(void)  
+{  
+    unsigned int c;  
+    unsigned int i, j;  
+      
+    for (i = 0; i < 256; i++) {  
+        c = (unsigned int)i;  
+        for (j = 0; j < 8; j++) {  
+            if (c & 1)  
+                c = 0xedb88320L ^ (c >> 1);  
+            else  
+                c = c >> 1;  
+        }  
+        crcTable[i] = c;  
+    }  
+}  
+  
+static unsigned int crc32(unsigned char *buffer, unsigned int size)  
+{  
+    unsigned int crc = 0xFFFFFFFF;
+	unsigned int i;  
+    for (i = 0; i < size; i++) {  
+        crc = crcTable[(crc ^ buffer[i]) & 0xff] ^ (crc >> 8);  
+    }  
+    return crc;  
 }
 
-static unsigned int crc32(char *buf, int len)
-{
-    unsigned int ret = 0xFFFFFFFF;
-    int  i;
-    if(!init) {
-         init_table();
-         init = 1;
-    }
-    
-    for(i = 0; i < len;i++) {
-         ret = CRC32[((ret & 0xFF) ^ buf[i])] ^ (ret >> 8);
-    }
-     
-	ret = ~ret;
-    return ret;
-}
 
 #if 0
 int main(int argc, char *argv[]) 
@@ -204,19 +194,21 @@ int sendReq(int fd, unsigned char* to, unsigned char* from)
 
 int sendFileData(int fd, unsigned char* to, unsigned char* from)
 {
-	char buf[1484];
+	unsigned char buf[1484];
 	fileData_t fData;
 	int readByte = -1;
 	unsigned int crc = 0;
 	unsigned count = 0;
 	int ret = -1;
 
+	initCrcTable();
+
 	while (!feof(fp)) {
 		memset(&fData, 0, sizeof(fData));
 		readByte = fread(buf, 1, sizeof(buf) -1, fp);
-		//crc = crc32(buf, readByte);
+		crc = crc32(buf, readByte);
 
-		//printf("readByte = %d, crc = 0x%x \n", readByte, crc);
+		printf("readByte = %d, crc = 0x%x \n", readByte, crc);
 		
 		fData.status = htonl(ING);
 		fData.count = htonl(count);
@@ -351,11 +343,11 @@ int createFile(ethernetFrame_t* frame)
 int recvFileData(ethernetFrame_t *frame)
 {
 	fileData_t fData;
-	char buf[1484] = {0};
-	unsigned count;
-	unsigned len;
-	unsigned int crc = 0;
-	unsigned int crcCalc = 0;
+	unsigned char buf[1484] = {0};
+	unsigned int count;
+	unsigned len = 0;
+	unsigned int crc = 0xFFFFFFFF;
+	unsigned int crcCalc = 0xFFFFFFFF;
 	int writeByte;
 
 	memset(&fData, 0, sizeof(fData));
@@ -365,16 +357,15 @@ int recvFileData(ethernetFrame_t *frame)
 	crc = ntohl(fData.crc);
 
 	memcpy(buf, fData.context, len);
-
-	//crcCalc = crc32(buf, len);
+	crcCalc = crc32(buf, len);
 
 	printf("file size = %d, count = %d, crc = 0x%x, calcCrc = 0x%x \n", len, count, crc, crcCalc);
-/*	
+	
 	if (crcCalc != crc) {
 		perror("file data crc check fail \n");
 		return -1;
 	}
-*/
+
 	writeByte = fwrite(buf, 1, len, fp);
 	if (writeByte != len) {
 		perror("fwrite fail \n");
@@ -389,6 +380,8 @@ int fileRecv(int fd)
 	ethernetFrame_t frame;
     int status;
     unsigned int flag = 1;
+
+    initCrcTable();
 
     while (flag) {
 		ret = recvEtherFrame(fd, &frame);
