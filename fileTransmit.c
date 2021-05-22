@@ -75,54 +75,6 @@ static unsigned int crc32(unsigned char *buffer, unsigned int size)
 }
 
 
-#if 0
-int main(int argc, char *argv[]) 
-{
-    int sfd;
-    unsigned char from[6];
-    unsigned char to[6];
-    //char* dstMac = NULL;
-    char dstMac[18] = {0};
-
-    sfd = createEtherSocket(argv[1], TYPE);
-    if (sfd < 0) {
-        perror("Fail to create Ether Socket \n");
-        exit(-1);
-    }
-
-    if (getLocalMacAddr(argv[1], from) < 0) {
-		perror("Fail to get local mac address \n");
-		goto quit;
-    }
-#if 0
-    dstMac = getMacFromArp(argv[2]);
-    if (NULL == dstMac) {
-    	fprintf(stderr, "Fail to get dest MAC address from ip %s \n", argv[2]);
-    	goto quit;
-    }
-#else
-	if (getMacFromArp(argv[2], dstMac) < 0) {
-		perror("Fail to get dest mac address \n");
-		goto quit;
-	}
-#endif
-
-    int ret = macAton(dstMac, to);
-    if (0 != ret) {
-        perror("Fail to mac aton \n");
-        goto quit;
-    }
-
-    ret = sendEtherData(sfd, to, from, TYPE, argv[3]);
-    if (-1 == ret) {
-        perror("Fail to send ethernet frame: ");
-        goto quit;
-    }
-    
-quit:
-    close(sfd);
-}
-#endif
 uint64_t htonll(uint64_t val)
 {
 	if (1 == htonl(1)) {
