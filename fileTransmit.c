@@ -30,7 +30,7 @@ typedef struct fileData {
 	int status;
 	unsigned int count;
 	unsigned int len;
-	unsigned int crc;
+	unsigned int sum;
 	unsigned char context[1484];
 }fileData_t;
 
@@ -46,6 +46,8 @@ static void usage(char *path)
     fprintf(stderr, "%s -s -i <iface> \n", basename(path));
 }
 
+
+#if 0
 static unsigned int crcTable[256];
 static void initCrcTable(void)  
 {  
@@ -73,6 +75,18 @@ static unsigned int crc32(unsigned char *buffer, unsigned int size)
     }  
     return crc;  
 }
+#else
+unsigned int checksum(unsigned char *p_data, int data_len)
+{
+    unsigned int sum = 0;
+    
+    while (data_len--) {
+        sum += *p_data++;
+    }
+    
+    return sum;
+}
+#endif
 
 
 uint64_t htonll(uint64_t val)
@@ -150,23 +164,23 @@ int sendFileData(int fd, unsigned char* to, unsigned char* from)
 	unsigned char buf[1484];
 	fileData_t fData;
 	int readByte = -1;
-	unsigned int crc = 0;
+	unsigned int sum = 0;
 	unsigned count = 0;
 	int ret = -1;
 
-	initCrcTable();
+	//initCrcTable();
 
 	while (!feof(fp)) {
 		memset(&fData, 0, sizeof(fData));
 		readByte = fread(buf, 1, sizeof(buf) -1, fp);
-		crc = crc32(buf, readByte);
-
+		//crc = crc32(buf, readByte);
+		sum = checksum(buf, readByte);
 		//printf("readByte = %d, crc = 0x%x \n", readByte, crc);
 		
 		fData.status = htonl(ING);
 		fData.count = htonl(count);
 		fData.len = htonl(readByte);
-		fData.crc = htonl(crc);
+		fData.sum = htonl(sum);
 		memcpy(fData.context, buf, readByte);
 		
 		ret = sendEtherData(fd, to, from, FILETRANSMIT, (char*)&fData, sizeof(fData));
@@ -306,26 +320,26 @@ int recvFileData(ethernetFrame_t *frame)
 	unsigned char buf[1484] = {0};
 	unsigned int count;
 	unsigned len = 0;
-	unsigned int crc = 0xFFFFFFFF;
-	unsigned int crcCalc = 0xFFFFFFFF;
+	unsigned int sum = 0xFFFFFFFF;
+	unsigned int sumCalc = 0xFFFFFFFF;
 	int writeByte;
 
 	memset(&fData, 0, sizeof(fData));
 	memcpy(&fData, frame->data, sizeof(fData));
 	count = ntohl(fData.count);
 	len = ntohl(fData.len);
-	crc = ntohl(fData.crc);
+	sum = ntohl(fData.sum);
 
 	memcpy(buf, fData.context, len);
-	crcCalc = crc32(buf, len);
+	sumCalc = checksum(buf, len);
 
-	//printf("file size = %d, count = %d, crc = 0x%x, calcCrc = 0x%x \n", len, count, crc, crcCalc);
-	
-	if (crcCalc != crc) {
-		perror("file data crc check fail \n");
+	//printf("file size = %d, count = %d, sum = 0x%x, sumcalc = 0x%x \n", len, count, sum, sumCalc);
+/*	
+	if (sumCalc != sum) {
+		perror("file data sum check fail \n");
 		return -1;
 	}
-
+*/
 	writeByte = fwrite(buf, 1, len, fp);
 	if (writeByte != len) {
 		perror("fwrite fail \n");
@@ -342,7 +356,7 @@ int fileRecv(int fd)
     int status;
     unsigned int flag = 1;
 
-    initCrcTable();
+    //initCrcTable();
 
     while (flag) {
 		ret = recvEtherFrame(fd, &frame);
