@@ -367,7 +367,7 @@ int fileRecv(int fd)
 		
 		memcpy(&status, frame.data, sizeof(status));
 		status = ntohl(status);
-		printf("status: 0x%x \n", status);
+		//printf("status: 0x%x \n", status);
 
 		switch (status) {
 			case START:
