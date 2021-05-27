@@ -39,6 +39,7 @@ char filename[MAXLEN] = {0};
 char filepath[MAXLEN] = {0};
 uint64_t fileSize = 0;
 FILE* fp = NULL;
+unsigned int fileCount = 0;
 
 static void usage(char *path)
 {
@@ -238,6 +239,8 @@ int fileSend(int fd, const char* iface, const char* dstIp)
 	//printf("fileSzie= %llu \n", fileSize);
 	rewind(fp);
 
+	fileCount = fileSize / 1484 + 1;
+
 	ret = sendReq(fd, to, from);
 	if (ret < 0) {
 		perror("Fail to send req \n");
@@ -290,12 +293,14 @@ int createFile(ethernetFrame_t* frame)
 	fileAttr_t fAttr;
 	memcpy(&fAttr, frame->data, sizeof(fAttr));
 	fileSize = ntohll(fAttr.fileSize);
+
+	fileCount = fileSize / 1484 + 1;
 	
 	strncpy(filepath, fAttr.dstpath, MAXLEN - 1);
 	strncpy(fName, fAttr.dstfileName, MAXLEN - 1);
 	snprintf(filename, MAXLEN - 1, "%s%s", filepath, fName);
 
-	printf("file: %s, fileSize = %llu \n", filename, fileSize);
+	printf("file: %s, fileSize = %llu, fileCount = %d \n", filename, fileSize, fileCount);
 	fp = fopen(filename, "a+");
 	if (NULL == fp) {
 		fprintf(stderr, "create file(%s) fail! \n", filename);
