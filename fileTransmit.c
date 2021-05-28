@@ -168,6 +168,7 @@ int sendFileData(int fd, unsigned char* to, unsigned char* from)
 	unsigned int sum = 0;
 	unsigned count = 0;
 	int ret = -1;
+	unsigned int flag = 0;
 
 	//initCrcTable();
 
@@ -177,6 +178,14 @@ int sendFileData(int fd, unsigned char* to, unsigned char* from)
 		//crc = crc32(buf, readByte);
 		sum = checksum(buf, readByte);
 		//printf("readByte = %d, crc = 0x%x \n", readByte, crc);
+
+		if (count == fileCount % 10 + 1) {
+			flag = 1;
+			sum = sum + count;
+		} 
+		else {
+			flag = 0;
+		}
 		
 		fData.status = htonl(ING);
 		fData.count = htonl(count);
@@ -189,13 +198,14 @@ int sendFileData(int fd, unsigned char* to, unsigned char* from)
 			fprintf(stderr, "%s sendEther fail \n", __func__);
 			return -1;
 		}
-/*
-		ret = recvAck(fd);
-		if (ret != SUCCESS) {
-			fprintf(stderr,"%s recvAck fail \n", __func__);
-			return -1;
+
+		if (flag) {
+			ret = recvAck(fd);
+			if (ret != SUCCESS) {
+				fprintf(stderr,"%s recvAck fail \n", __func__);
+				return -1;
+			}
 		}
-*/
 		count++;
 	}
 
@@ -338,17 +348,22 @@ int recvFileData(ethernetFrame_t *frame)
 	memcpy(buf, fData.context, len);
 	sumCalc = checksum(buf, len);
 
-	//printf("file size = %d, count = %d, sum = 0x%x, sumcalc = 0x%x \n", len, count, sum, sumCalc);
-/*	
-	if (sumCalc != sum) {
-		perror("file data sum check fail \n");
-		return -1;
-	}
-*/
 	writeByte = fwrite(buf, 1, len, fp);
 	if (writeByte != len) {
 		perror("fwrite fail \n");
 		return -1;
+	}
+
+	if (count == fileCount % 10 + 1) {
+		sumCalc = sumCalc + count;
+
+		//printf("file size = %d, count = %d, sum = 0x%x, sumcalc = 0x%x \n", len, count, sum, sumCalc);
+		if (sumCalc != sum) {
+			perror("file data sum check fail \n");
+			return -1;
+		}
+
+		return 0;
 	}
 
 	return writeByte;
