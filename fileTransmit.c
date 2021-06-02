@@ -18,6 +18,7 @@
 #define FAIL    0xEE
 
 #define FILETRANSMIT 0x1024
+#define TRANSMITSIZE 1488
 
 typedef struct fileAttr {
 	int status;
@@ -28,10 +29,9 @@ typedef struct fileAttr {
 
 typedef struct fileData {
 	int status;
-	unsigned int count;
 	unsigned int len;
 	unsigned int sum;
-	unsigned char context[1484];
+	unsigned char context[TRANSMITSIZE];
 }fileData_t;
 
 
@@ -40,6 +40,8 @@ char filepath[MAXLEN] = {0};
 uint64_t fileSize = 0;
 FILE* fp = NULL;
 unsigned int fileCount = 0;
+unsigned int recvCount = 0;
+
 
 static void usage(char *path)
 {
@@ -162,33 +164,22 @@ int sendReq(int fd, unsigned char* to, unsigned char* from)
 
 int sendFileData(int fd, unsigned char* to, unsigned char* from)
 {
-	unsigned char buf[1484];
+	unsigned char buf[TRANSMITSIZE];
 	fileData_t fData;
 	int readByte = -1;
 	unsigned int sum = 0;
-	unsigned count = 0;
+	unsigned int count = 0;
 	int ret = -1;
-	unsigned int flag = 0;
 
 	//initCrcTable();
 
 	while (!feof(fp)) {
 		memset(&fData, 0, sizeof(fData));
-		readByte = fread(buf, 1, sizeof(buf) -1, fp);
+		readByte = fread(buf, 1, sizeof(buf), fp);
 		//crc = crc32(buf, readByte);
 		sum = checksum(buf, readByte);
-		//printf("readByte = %d, crc = 0x%x \n", readByte, crc);
-
-		if (count == fileCount % 10 + 1) {
-			flag = 1;
-			sum = sum + count;
-		} 
-		else {
-			flag = 0;
-		}
 		
 		fData.status = htonl(ING);
-		fData.count = htonl(count);
 		fData.len = htonl(readByte);
 		fData.sum = htonl(sum);
 		memcpy(fData.context, buf, readByte);
@@ -199,15 +190,16 @@ int sendFileData(int fd, unsigned char* to, unsigned char* from)
 			return -1;
 		}
 
-		if (flag) {
-			ret = recvAck(fd);
-			if (ret != SUCCESS) {
-				fprintf(stderr,"%s recvAck fail \n", __func__);
-				return -1;
-			}
+		ret = recvAck(fd);
+		if (ret != SUCCESS) {
+			fprintf(stderr,"%s recvAck fail \n", __func__);
+			return -1;
 		}
 		count++;
+		//usleep(1000);
 	}
+
+	printf("send %d packets\n", count);
 
 	return 0;
 }
@@ -249,7 +241,7 @@ int fileSend(int fd, const char* iface, const char* dstIp)
 	//printf("fileSzie= %llu \n", fileSize);
 	rewind(fp);
 
-	fileCount = fileSize / 1484 + 1;
+	fileCount = fileSize / TRANSMITSIZE + 1;
 
 	ret = sendReq(fd, to, from);
 	if (ret < 0) {
@@ -304,14 +296,14 @@ int createFile(ethernetFrame_t* frame)
 	memcpy(&fAttr, frame->data, sizeof(fAttr));
 	fileSize = ntohll(fAttr.fileSize);
 
-	fileCount = fileSize / 1484 + 1;
+	fileCount = fileSize / TRANSMITSIZE + 1;
 	
 	strncpy(filepath, fAttr.dstpath, MAXLEN - 1);
 	strncpy(fName, fAttr.dstfileName, MAXLEN - 1);
 	snprintf(filename, MAXLEN - 1, "%s%s", filepath, fName);
 
 	printf("file: %s, fileSize = %llu, fileCount = %d \n", filename, fileSize, fileCount);
-	fp = fopen(filename, "a+");
+	fp = fopen(filename, "w+");
 	if (NULL == fp) {
 		fprintf(stderr, "create file(%s) fail! \n", filename);
 		return -1;
@@ -332,41 +324,33 @@ int createFile(ethernetFrame_t* frame)
 int recvFileData(ethernetFrame_t *frame)
 {
 	fileData_t fData;
-	unsigned char buf[1484] = {0};
-	unsigned int count;
-	unsigned len = 0;
+	unsigned char buf[TRANSMITSIZE] = {0};
+	unsigned int len = 0;
 	unsigned int sum = 0xFFFFFFFF;
 	unsigned int sumCalc = 0xFFFFFFFF;
 	int writeByte;
-
+	
+	unsigned int off = sizeof(fData) - TRANSMITSIZE;
 	memset(&fData, 0, sizeof(fData));
-	memcpy(&fData, frame->data, sizeof(fData));
-	count = ntohl(fData.count);
-	len = ntohl(fData.len);
+	memcpy(&fData, frame->data, off);
+
 	sum = ntohl(fData.sum);
-
-	memcpy(buf, fData.context, len);
+	len = ntohl(fData.len);
+	memcpy(buf, frame->data + off, len);
+	
 	sumCalc = checksum(buf, len);
-
+	if (sum != sumCalc) {
+		fprintf(stderr, "check sum fail \n");
+		return -1;
+	}
+	
 	writeByte = fwrite(buf, 1, len, fp);
 	if (writeByte != len) {
 		perror("fwrite fail \n");
 		return -1;
 	}
 
-	if (count == fileCount % 10 + 1) {
-		sumCalc = sumCalc + count;
-
-		//printf("file size = %d, count = %d, sum = 0x%x, sumcalc = 0x%x \n", len, count, sum, sumCalc);
-		if (sumCalc != sum) {
-			perror("file data sum check fail \n");
-			return -1;
-		}
-
-		return 0;
-	}
-
-	return writeByte;
+	return 0;
 }
 
 int fileRecv(int fd)
@@ -414,6 +398,9 @@ int fileRecv(int fd)
 		}
         //usleep(100);
 	}
+
+	printf("recvCount = %d \n", recvCount);
+	
 quit:
 	if (fp)
     	fclose(fp);
