@@ -303,7 +303,7 @@ int createFile(ethernetFrame_t* frame)
 	snprintf(filename, MAXLEN - 1, "%s%s", filepath, fName);
 
 	printf("file: %s, fileSize = %llu, fileCount = %d \n", filename, fileSize, fileCount);
-	fp = fopen(filename, "w+");
+	fp = fopen(filename, "w");
 	if (NULL == fp) {
 		fprintf(stderr, "create file(%s) fail! \n", filename);
 		return -1;
@@ -350,6 +350,7 @@ int recvFileData(ethernetFrame_t *frame)
 		return -1;
 	}
 
+	recvCount++;
 	return 0;
 }
 
