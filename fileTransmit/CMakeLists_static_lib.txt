@@ -35,7 +35,9 @@ SET(CMAKE_C_COMPILER aarch64-himix200-linux-gcc)
 endif()
 
 
-add_library(ethernet STATIC
+add_library(ethernet
+    STATIC
+    #SHARED
     ethernet.c
 )
 
