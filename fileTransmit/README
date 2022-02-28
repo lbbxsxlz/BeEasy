@@ -1,5 +1,9 @@
 # 以太网帧文件传输
 [文件传送](fileTransmit.c)
+支持梁中国编译方式，其一是直接使用Makefile, make即可
+
+第二种是使用cmake, 创建build目录，然后在build目录中 cmake ..，然后make即可
+
 文件传输功能已经实现，为了保证数据的完整性，每发送一帧以太网帧均需要回复，导致文件传输的速率无法提升。
 Versin_1.0
 	commit d04f722a915b49727afdcb7b5ec2ead5d97d8ade
