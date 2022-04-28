@@ -11,7 +11,7 @@
 #include <linux/if_ether.h>
 
 #define MAX_ETHERNET_FRAME_SIZE 1514
-#define MAX_ETHERNET_DATA_SIZE 1500
+#define MAX_ETHERNET_DATA_SIZE  1500
 
 #define ETHERNET_HEADER_SIZE 14
 
@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
     short type, old_type = 0;
     struct ethernet_frame frame;
 
-	/* 只处理TYPE的以太网包 */
+    /* 只处理TYPE的以太网包 */
     sfd = socket(PF_PACKET, SOCK_RAW, htons(TYPE));
     if (sfd < 0) {
         perror("Fail to create Ether Socket \n");
@@ -50,18 +50,18 @@ int main(int argc, char *argv[])
     }
 
     while(1) {
-		ret = recvfrom(sfd, &frame, sizeof(frame), 0, NULL, NULL);
-		if (ret < 0) {
-			perror("Fail to recv ether data");
-		}
+        ret = recvfrom(sfd, &frame, sizeof(frame), 0, NULL, NULL);
+        if (ret < 0) {
+            perror("Fail to recv ether data \n");
+        }
 
-		type = ntohs(frame.type);
+        type = ntohs(frame.type);
 
-		if (type == TYPE) {
-			printf("%s \n", frame.data);
-		}
+        if (type == TYPE) {
+            printf("%s \n", frame.data);
+        }
 
-		usleep(10000);
+        usleep(10000);
     }
 
     return 0;

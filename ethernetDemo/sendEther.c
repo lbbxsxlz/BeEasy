@@ -10,7 +10,7 @@
 #include <sys/socket.h>
 
 #define MAX_ETHERNET_FRAME_SIZE 1514
-#define MAX_ETHERNET_DATA_SIZE 1500
+#define MAX_ETHERNET_DATA_SIZE  1500
 
 #define ETHERNET_HEADER_SIZE 14
 
@@ -51,13 +51,13 @@ char* getMacFromArp(const char* req_ip)
     /* Skip first line */
     while (!feof(procFile) && fgetc(procFile) != '\n');
  
-	 /* Find ip, copy mac in reply */
+    /* Find ip, copy mac in reply */
     reply = NULL;
     while (!feof(procFile) && (fscanf(procFile, " %15[0-9.] %*s %*s %17[A-Fa-f0-9:] %*s %*s", ip, mac) == 2)) {
         if (strcmp(ip, req_ip) == 0) {
-	    reply = strdup(mac);
-	    break;
-	}
+        reply = strdup(mac);
+        break;
+    }
     }
  
     fclose(procFile);
@@ -136,7 +136,7 @@ int createEtherSocket(const char* iface)
     }
 
     ret = getLocalNetInfo(iface, sfd, &if_index, localMac);
-   	
+       
     struct sockaddr_ll sll;
     bzero(&sll, sizeof(sll));
     sll.sll_family = AF_PACKET;
@@ -202,8 +202,8 @@ int main(int argc, char *argv[])
 
     dstMac = getMacFromArp(argv[2]);
     if (NULL == dstMac) {
-    	fprintf(stderr, "Fail to get dest MAC address from ip %s \n", argv[2]);
-    	goto quit;
+        fprintf(stderr, "Fail to get dest MAC address from ip %s \n", argv[2]);
+        goto quit;
     }
     
     int ret = macAton(dstMac, to);
@@ -218,7 +218,7 @@ int main(int argc, char *argv[])
     // send data
     ret = sendEtherData(sfd, to, TYPE, argv[3]);
     if (-1 == ret) {
-        perror("Fail to send ethernet frame: ");
+        perror("Fail to send ethernet frame \n");
         goto quit;
     }
     
