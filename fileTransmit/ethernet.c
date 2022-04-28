@@ -26,13 +26,13 @@ char* getMacFromArp(const char* req_ip)
     /* Skip first line */
     while (!feof(procFile) && fgetc(procFile) != '\n');
  
-	 /* Find ip, copy mac in reply */
+    /* Find ip, copy mac in reply */
     reply = NULL;
     while (!feof(procFile) && (fscanf(procFile, " %15[0-9.] %*s %*s %17[A-Fa-f0-9:] %*s %*s", ip, mac) == 2)) {
         if (strcmp(ip, req_ip) == 0) {
-	        reply = strdup(mac);
-	        break;
-	    }
+            reply = strdup(mac);
+            break;
+        }
     }
  
     fclose(procFile);
@@ -54,9 +54,9 @@ int getMacFromArp(const char* req_ip, char* macStr)
  
     while (!feof(procFile) && (fscanf(procFile, " %15[0-9.] %*s %*s %17[A-Fa-f0-9:] %*s %*s", ip, mac) == 2)) {
         if (strcmp(ip, req_ip) == 0) {
-	        strcpy(macStr, mac);
-	        break;
-	    }
+            strcpy(macStr, mac);
+            break;
+        }
     }
  
     fclose(procFile);
@@ -74,46 +74,46 @@ int macAton(const char* a, unsigned char *n)
 
 int getIfindex(const char* iface, int* ifindex)
 {
-	int fd = -1;
-	struct ifreq ifr;
-	
-	fd = socket(AF_INET, SOCK_DGRAM, 0);
-	if (fd < 0) {
-		perror("Fail to create socket! \n");
-		return -1;
-	}
+    int fd = -1;
+    struct ifreq ifr;
+    
+    fd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (fd < 0) {
+        perror("Fail to create socket! \n");
+        return -1;
+    }
 
-	strncpy(ifr.ifr_name, iface, sizeof(ifr.ifr_name) - 1);
-	if (ioctl(fd, SIOCGIFINDEX, &ifr) < 0) {
-		perror("Fail to get ifindex! \n");
-		close(fd);
-		return -1;
-	}
+    strncpy(ifr.ifr_name, iface, sizeof(ifr.ifr_name) - 1);
+    if (ioctl(fd, SIOCGIFINDEX, &ifr) < 0) {
+        perror("Fail to get ifindex! \n");
+        close(fd);
+        return -1;
+    }
 
-	*ifindex = ifr.ifr_ifindex;
+    *ifindex = ifr.ifr_ifindex;
 
-	close(fd);
-	return 0;
+    close(fd);
+    return 0;
 }
 
 
 int getLocalMacAddr(const char* iface, unsigned char* mac)
 {
-	int fd = -1;
-	struct ifreq ifr;
-	
-	fd = socket(AF_INET, SOCK_DGRAM, 0);
-	if (fd < 0) {
-		perror("Fail to create socket! \n");
-		return -1;
-	}
+    int fd = -1;
+    struct ifreq ifr;
+    
+    fd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (fd < 0) {
+        perror("Fail to create socket! \n");
+        return -1;
+    }
     
     strncpy(ifr.ifr_name, iface, sizeof(ifr.ifr_name) - 1);
 
     if (ioctl(fd, SIOCGIFHWADDR, &ifr) < 0) {
         perror("Fail to get mac address! \n");
-		close(fd);
-		return -1;
+        close(fd);
+        return -1;
     }
 
     memcpy(mac, ifr.ifr_hwaddr.sa_data, MAC_BYTES);
@@ -134,9 +134,9 @@ int createEtherSocket(const char* iface, short proto)
     }
     
     if (getIfindex(iface, &if_index) < 0) {
-		return -1;
+        return -1;
     }
-   	
+       
     struct sockaddr_ll sll;
     bzero(&sll, sizeof(sll));
     sll.sll_family = AF_PACKET;
