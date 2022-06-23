@@ -107,7 +107,7 @@ int main(void)
 
 	ret = recv(serv_sock, recvbuf, sizeof(recvbuf) - 1, 0);
 	if (ret < 0) {
-		printf("send Error - %x\n",
+		printf("recv Error - %x\n",
 #ifdef _MSC_VER
 			WSAGetLastError()
 #else
