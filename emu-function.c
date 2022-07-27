@@ -153,3 +153,15 @@ libspdm_return_t do_certificate_provising_via_spdm(uint32_t* session_id)
     }
     else {
     }
+
+if (m_use_version >= SPDM_MESSAGE_VERSION_12) {      
+        status = do_certificate_provising_via_spdm(&session_id);
+        if (LIBSPDM_STATUS_IS_ERROR(status)) {
+            printf("do_certificate_provising_via_spdm - %x\n",
+                (uint32_t)status);
+            return status;
+        }
+    }
+
+libspdm_return_t do_handshake_via_spdm(void);
+libspdm_return_t do_certificate_provising_via_spdm(uint32_t* session_id);
