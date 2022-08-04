@@ -16,7 +16,7 @@ void * _memMap(unsigned long phy_addr, unsigned long size, unsigned long *page_d
 	int fd = -1;
 
 	if (size == 0) {
-		perror("memmap():size can't be zero!\n");
+		perror("_memMap():size can't be zero!\n");
 		return NULL;
 	}
 
@@ -35,7 +35,7 @@ void * _memMap(unsigned long phy_addr, unsigned long size, unsigned long *page_d
 
 	addr = mmap((void *)0, *size_in_page, PROT_READ|PROT_WRITE, MAP_SHARED, fd, phy_addr_in_page);
 	if (addr == MAP_FAILED) {
-		printf("memmap():mmap @ 0x%lx error!\n", phy_addr_in_page);
+		printf("_memMap():mmap @ 0x%lx error!\n", phy_addr_in_page);
 		close(fd);
 		fd = -1;
 		return NULL;
@@ -55,7 +55,7 @@ int _memUnmap(void * virtAddr, unsigned long page_diff, unsigned long size_in_pa
 	unsigned long virtAddrBase = (unsigned long)virtAddr - page_diff;
 
 	if(munmap((void *)virtAddrBase, size_in_page) != 0) {
-		perror("memunmap(): munmap failed!\n");
+		perror("_memUnmap(): munmap failed!\n");
 		return -1;
 	}
 
@@ -74,7 +74,7 @@ int showRegValue(unsigned long phyAddr, unsigned len)
 
 	virtAddr = (unsigned int*)_memMap(phyAddr, 1, &page_diff, &size_in_page);
 	if (NULL == virtAddr) {
-		perror("memmap fail \n");
+		perror("_memMap fail \n");
 		return -1;
 	}
 
@@ -87,7 +87,7 @@ int showRegValue(unsigned long phyAddr, unsigned len)
 	ret = _memUnmap(virtAddr, page_diff, size_in_page);
 
 	if (0 > ret) {
-		perror("memmap fail \n");
+		perror("_memUnmap fail \n");
 		return -1;
 	}
 	
@@ -105,7 +105,7 @@ int readReg(unsigned long phyAddr, unsigned long *value)
 
 	virtAddr = _memMap(phyAddr, 1, &page_diff, &size_in_page);
 	if (NULL == virtAddr) {
-		perror("memmap fail \n");
+		perror("_memMap fail \n");
 		return -1;
 	}
 	
@@ -114,7 +114,7 @@ int readReg(unsigned long phyAddr, unsigned long *value)
 	ret = _memUnmap(virtAddr, page_diff, size_in_page);
 
 	if (0 > ret) {
-		perror("memmap fail \n");
+		perror("_memUnmap fail \n");
 		return -1;
 	}
 
@@ -131,7 +131,7 @@ int writeReg(unsigned long phyAddr, unsigned long value)
 
 	virtAddr = _memMap(phyAddr, 1, &page_diff, &size_in_page);
 	if (NULL == virtAddr) {
-		perror("memmap fail \n");
+		perror("_memMap fail \n");
 		return -1;
 	}
 	
@@ -140,7 +140,7 @@ int writeReg(unsigned long phyAddr, unsigned long value)
 	ret = _memUnmap(virtAddr, page_diff, size_in_page);
 
 	if (0 > ret) {
-		perror("memmap fail \n");
+		perror("_memUnmap fail \n");
 		return -1;
 	}
 
