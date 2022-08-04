@@ -9,3 +9,13 @@
 [文件传送](fileTransmit/fileTransmit.c)
 文件传输功能已经实现，为了保证数据的完整性，每发送一帧以太网帧均需要回复，导致文件传输的速率无法提升。
 TODO：提升文件传输的效率
+
+## 用户态MMIO物理地址映射到虚拟地址
+[mmio map](memPhy2Virt/memPhy2Virt.c)
+
+## Window系统socket创建简单的基于TCP的C/S demo
+[server](sockets_tcp/server.c)
+[client](sockets_tcp/client.c)
+
+## windows系统上getopt的实现
+[getopt](getopt4windows/getopt.c)
