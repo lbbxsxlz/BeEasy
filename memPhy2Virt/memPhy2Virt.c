@@ -62,14 +62,15 @@ int _memUnmap(void * virtAddr, unsigned long page_diff, unsigned long size_in_pa
 	return 0;
 }
 
-int showRegValue(unsigned long phyAddr, unsigned len)
+int showRegValue(unsigned long phyAddr, unsigned long len)
 {
-	unsigned int* virtAddr = NULL;
+	void* virtAddr = NULL;
+	void* tmpAddr = NULL;
 	int ret = -1;
 	unsigned long page_diff = 0;
 	unsigned long size_in_page = 0;
-	int i;
-	unsigned int value;
+	unsigned long i;
+	unsigned long value;
 	
 
 	virtAddr = (unsigned int*)_memMap(phyAddr, 1, &page_diff, &size_in_page);
@@ -77,11 +78,13 @@ int showRegValue(unsigned long phyAddr, unsigned len)
 		perror("_memMap fail \n");
 		return -1;
 	}
+	
+	tmpAddr = virtAddr;
 
 	for (i = 0; i < len; i++) {
-		value = *virtAddr;
-		printf("Reg[0x%x] = 0x%x \n", (unsigned int)phyAddr, value);
-		virtAddr++;
+		value = *(unsigned long*)tmpAddr;
+		printf("Reg[0x%lx] = 0x%lx \n", phyAddr + i * sizeof(unsigned long), value);
+		(unsigned long*)tmpAddr++;
 	}
 
 	ret = _memUnmap(virtAddr, page_diff, size_in_page);
@@ -109,7 +112,7 @@ int readReg(unsigned long phyAddr, unsigned long *value)
 		return -1;
 	}
 	
-	*value = *(unsigned int*)virtAddr;
+	*value = *(unsigned long*)virtAddr;
 
 	ret = _memUnmap(virtAddr, page_diff, size_in_page);
 
@@ -135,7 +138,7 @@ int writeReg(unsigned long phyAddr, unsigned long value)
 		return -1;
 	}
 	
-	*(unsigned int*)virtAddr = (unsigned int)value;
+	*(unsigned long*)virtAddr = value;
 
 	ret = _memUnmap(virtAddr, page_diff, size_in_page);
 
@@ -146,4 +149,3 @@ int writeReg(unsigned long phyAddr, unsigned long value)
 
 	return 0;
 }
-
