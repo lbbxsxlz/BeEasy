@@ -1,9 +1,9 @@
 #wildcard 扩展通配符
 #patsubst 替换通配符
-SRC_FILES := $(wildcard ./src/*.c)
+SRC_FILES := $(wildcard ./*.c)
 OBJ_FILES := $(patsubst %.c,%.o,$(SRC_FILES))
 
-INC := -I ./inc/
+INC := -I ./
 BIN := memphy2virt
 CC=$(HOST)-gcc
 
