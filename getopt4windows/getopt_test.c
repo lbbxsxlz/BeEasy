@@ -37,12 +37,14 @@ int main(int argc, char** argv)
 		}
 	}
 
-	if (mode != 1) {
+	if (mode != 0) {
 		if (a == 0 || b == 0) {
 			usage(argv[0]);
 			exit(-1);
 		}
 	}
+
+	printf("mode = %d, a = %d, b= %d \n", mode, a, b);
 
 	return 0;
 }
