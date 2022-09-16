@@ -1,40 +1,48 @@
-#include "my_getopt.h"
+#include "getopt.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 void usage(char* exe)
 {
 	fprintf(stderr, "Invalid parameters! \n");
 	fprintf(stderr, "Please input the corrects parameters! The correct samples are on below: \n");
-	fprintf(stderr, "    %s -m RootCA \n", exe);
-	fprintf(stderr, "    %s -m Device -l DICE \n", exe);
-	fprintf(stderr, "    %s -m Device -l layer0 -s self_sign \n", exe);
-	fprintf(stderr, "    %s -m Device -l layer0 -s root_sign \n", exe);
-	fprintf(stderr, "    %s -m Device -l sublayers \n", exe);
+	fprintf(stderr, "    %s -m Server \n", exe);
+	fprintf(stderr, "    %s -m Client -a DICE \n", exe);
+	fprintf(stderr, "    %s -m Client -a 5 -b 7 \n", exe);
+	fprintf(stderr, "    %s -m Client -a 8 -b 9 \n", exe);
+	fprintf(stderr, "    %s -m Client -a 3 \n", exe);
 }
 
 int main(int argc, char** argv)
 {
-	char mode[10] = { 0 };
-	char layer[10] = { 0 };
-	char sign[10] = { 0 };
+	int opt;
+	int mode = 0;
+	int a = 0, b = 0;
   
-  while ((opt = getopt(argc, argv, "m:s:l:")) != -1) {
+    while ((opt = getopt(argc, argv, "a:b:m")) != -1) {
 		switch (opt) {
 		case 'm':
-			strncpy(mode, optarg, sizeof(mode) -1);
+			mode = 1;
 			break;
-		case 's':
-			strncpy(sign, optarg, sizeof(sign) - 1);
+		case 'a':
+			a = atoi(optarg);
 			break;
-		case 'l':
-			strncpy(layer, optarg, sizeof(layer) - 1);
+		case 'b':
+			b = atoi(optarg);
 			break;
 		default:
 			usage(argv[0]);
 			exit(-1);
 		}
 	}
-  
-  printf("mode: %s \n". mode);
-  printf("layer: %s \n". mode);
-  printf("sign: %s \n". mode);
+
+	if (mode != 1) {
+		if (a == 0 || b == 0) {
+			usage(argv[0]);
+			exit(-1);
+		}
+	}
+
+	return 0;
 }
