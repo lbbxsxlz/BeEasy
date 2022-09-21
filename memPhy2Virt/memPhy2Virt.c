@@ -6,7 +6,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/mman.h>
-#include <error.h>
+#include <errno.h>
 #include "memPhy2Virt.h"
 
 void * _memMap(unsigned long phy_addr, unsigned long size, unsigned long *page_diff, unsigned long *size_in_page)
@@ -62,18 +62,18 @@ int _memUnmap(void * virtAddr, unsigned long page_diff, unsigned long size_in_pa
 	return 0;
 }
 
-int showRegValue(unsigned long phyAddr, unsigned long len)
+int showRegValue(unsigned long phyAddr, unsigned int len)
 {
 	void* virtAddr = NULL;
 	void* tmpAddr = NULL;
 	int ret = -1;
 	unsigned long page_diff = 0;
 	unsigned long size_in_page = 0;
-	unsigned long i;
-	unsigned long value;
+	unsigned int i;
+	unsigned int value;
 	
 
-	virtAddr = (unsigned int*)_memMap(phyAddr, 1, &page_diff, &size_in_page);
+	virtAddr = _memMap(phyAddr, 1, &page_diff, &size_in_page);
 	if (NULL == virtAddr) {
 		perror("_memMap fail \n");
 		return -1;
@@ -82,9 +82,9 @@ int showRegValue(unsigned long phyAddr, unsigned long len)
 	tmpAddr = virtAddr;
 
 	for (i = 0; i < len; i++) {
-		value = *(unsigned long*)tmpAddr;
-		printf("Reg[0x%lx] = 0x%lx \n", phyAddr + i * sizeof(unsigned long), value);
-		(unsigned long*)tmpAddr++;
+		value = *(unsigned int*)tmpAddr;
+		printf("Reg[0x%lx] = 0x%x \n", phyAddr + i * sizeof(unsigned int), value);
+		tmpAddr += sizeof(unsigned int);
 	}
 
 	ret = _memUnmap(virtAddr, page_diff, size_in_page);
@@ -98,7 +98,7 @@ int showRegValue(unsigned long phyAddr, unsigned long len)
 }
 
 
-int readReg(unsigned long phyAddr, unsigned long *value)
+int readReg(unsigned long phyAddr, unsigned int *value)
 {
 	void* virtAddr = NULL;
 	int ret = -1;
@@ -112,7 +112,7 @@ int readReg(unsigned long phyAddr, unsigned long *value)
 		return -1;
 	}
 	
-	*value = *(unsigned long*)virtAddr;
+	*value = *(unsigned int*)virtAddr;
 
 	ret = _memUnmap(virtAddr, page_diff, size_in_page);
 
@@ -124,7 +124,7 @@ int readReg(unsigned long phyAddr, unsigned long *value)
 	return 0;
 }
 
-int writeReg(unsigned long phyAddr, unsigned long value)
+int writeReg(unsigned long phyAddr, unsigned int value)
 {
 	void* virtAddr = NULL;
 	int ret = -1;
@@ -138,7 +138,7 @@ int writeReg(unsigned long phyAddr, unsigned long value)
 		return -1;
 	}
 	
-	*(unsigned long*)virtAddr = value;
+	*(unsigned int*)virtAddr = value;
 
 	ret = _memUnmap(virtAddr, page_diff, size_in_page);
 
