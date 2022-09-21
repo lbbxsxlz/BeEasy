@@ -40,6 +40,9 @@ int main(int argc, char* argv[])
 	unsigned long length = 0;
 	unsigned long addr = 0;
 	unsigned long value = 0;
+	
+	unsigned int tmp_value = 0;
+	unsigned int len = 0;
 
 	while ((opt = getopt(argc, argv, "a:l:v:hrsw")) != -1) {
 		switch (opt) {
@@ -80,11 +83,12 @@ int main(int argc, char* argv[])
 			exit(EXIT_FAILURE);
 		}
 		else {
-			ret = readReg(addr, &value);
+			ret = readReg(addr, &tmp_value);
 			if (ret < 0) {
 				printf("read Reg[0x%lx] fail \n", addr);
 				exit(EXIT_FAILURE);
 			}
+			value = tmp_value;
 			printf("Reg[0x%lx] = 0x%lx \n", addr, value);
 		}
 	} else if (strncmp(mode, "write", 5) == 0) {
@@ -93,7 +97,8 @@ int main(int argc, char* argv[])
 			usage(argv[0]);
 			exit(EXIT_FAILURE);
 		} else {
-			ret = writeReg(addr, value);
+			tmp_value = value & 0xFFFFFFFF;
+			ret = writeReg(addr, tmp_value);
 			if (ret < 0) {
 				printf("write Reg[0x%lx] fail \n", addr);
 				exit(EXIT_FAILURE);
@@ -105,7 +110,8 @@ int main(int argc, char* argv[])
 			usage(argv[0]);
 			exit(EXIT_FAILURE);
 		} else {
-			ret = showRegValue(addr, length);
+			len = length & 0xFFFFFFFF;
+			ret = showRegValue(addr, len);
 			if (ret < 0) {
 				printf("show Reg[0x%lx] fail \n", addr);
 				exit(EXIT_FAILURE);
