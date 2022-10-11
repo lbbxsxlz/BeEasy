@@ -22,3 +22,6 @@ TODO：提升文件传输的效率
 
 ## cJson demo, 查找关键字中的某个键值
 [json_read](jsonRead/jsonRead.c)
+
+## SpinLock Test 自旋锁demo用于验证CPU hang
+[Spin_Lock](spinLockTest/spinLockTest.c)
