@@ -25,3 +25,6 @@ TODO：提升文件传输的效率
 
 ## SpinLock Test 自旋锁demo用于验证CPU hang
 [Spin_Lock](spinLockTest/spinLockTest.c)
+
+## 文件路径遍历，删除目录中最大的文件
+[workthrough](walkthrough/walkthrougthPath.c)
