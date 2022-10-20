@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 #include <linux/mii.h>
 #include <sys/types.h>
@@ -10,8 +11,10 @@
 #include <linux/types.h>
 #include <netinet/in.h>
 
-#define PHY_ID_HIGH_WORD 2
-#define PHY_ID_LOW_ORD 3
+#define CONTROL_REG         0
+#define STATUS_REG          1
+#define PHY_ID_HIGH_WORD    2
+#define PHY_ID_LOW_WORD     3
 	
 static int readPhyReg(const char* ifname, __u16 regNum, __u16* val)
 {
@@ -116,7 +119,7 @@ static int getPhyID(const char* ifname, uint32_t* id)
 	__u16 reg3;
 
 	int ret;
-	/* 获取phy寄存器2 */
+	/* 获取phy id寄存器2 */
 	ret = readPhyReg(ifname, PHY_ID_HIGH_WORD, &reg2);
 	if (0 > ret)
 	{
@@ -124,7 +127,7 @@ static int getPhyID(const char* ifname, uint32_t* id)
 		return -1;
 	}
 
-	/* 获取phy寄存器3 */
+	/* 获取phy id寄存器3 */
 	ret = readPhyReg(ifname, PHY_ID_LOW_WORD, &reg3);
 	if (0 > ret)
 	{
@@ -141,10 +144,27 @@ static int getPhyID(const char* ifname, uint32_t* id)
 
 int main(int argc, char *argv[])
 {	
-	const char* ifname = "eth0";
+	/* argv1 ifname, argv2 reg */
+	char ifname[10] = {0};
+	uint32_t regIndex;
+	__u16 val;
+
+	strncpy(ifname, argv[1], sizeof(ifname) - 1);
 	int ret;
-	uint32_t id;
-	ret = getPhyID(ifname, &id);
-	printf("id = 0x%x \n", id);
+
+	if (argc == 2) {
+		uint32_t id;
+		ret = getPhyID(ifname, &id);
+		printf("id = 0x%x \n", id); 
+	} else if (argc == 3) {
+		regIndex = strtoul(argv[2], NULL,16);
+		ret = readPhyReg(ifname, (__u16)regIndex, &val);
+		if (ret < 0) {
+			printf("readPhyReg fail: ifname %s, reg index %d \n", ifname, regIndex);
+			return -1;
+		}
+		printf("reg index %d, value %x \n", regIndex, val);
+	}
+	
 	return 0;
 }
