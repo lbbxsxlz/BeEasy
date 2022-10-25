@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <libgen.h>
 #include <linux/mii.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -103,7 +104,7 @@ static int writePhyReg(const char* ifname, __u16 regNum, __u16 val)
 	ret = ioctl(sockfd, SIOCSMIIREG, &ifr);
 	if (0 > ret)
 	{
-		printf("get phy register fail \n");
+		printf("set phy register fail \n");
 		close(sockfd);
 		return -1;
 	}
@@ -142,13 +143,26 @@ static int getPhyID(const char* ifname, uint32_t* id)
 	return 0;
 }
 
+static void usage(char *path)
+{
+	fprintf(stderr, "The samples are on below: \n\n");
+	fprintf(stderr, "To show ethernet phy ID, %s $ifname \n", basename(path));
+	fprintf(stderr, "To read ethernet phy register, %s $ifname $reg \n", basename(path));
+	fprintf(stderr, "To write ethernet phy register,%s $ifname $reg $value \n", basename(path));
+}
+
 int main(int argc, char *argv[])
 {	
 	/* argv1 ifname, argv2 reg */
 	char ifname[10] = {0};
-	uint32_t regIndex;
+	__u16 regIndex;
 	__u16 val;
 
+	if (argc < 2) {
+		usage(argv[0]);
+		return -1;
+	}
+	
 	strncpy(ifname, argv[1], sizeof(ifname) - 1);
 	int ret;
 
@@ -157,13 +171,26 @@ int main(int argc, char *argv[])
 		ret = getPhyID(ifname, &id);
 		printf("id = 0x%x \n", id); 
 	} else if (argc == 3) {
-		regIndex = strtoul(argv[2], NULL,16);
-		ret = readPhyReg(ifname, (__u16)regIndex, &val);
+		regIndex = (__u16)strtoul(argv[2], NULL,16);
+		ret = readPhyReg(ifname, regIndex, &val);
 		if (ret < 0) {
 			printf("readPhyReg fail: ifname %s, reg index %d \n", ifname, regIndex);
 			return -1;
 		}
 		printf("reg index %d, value %x \n", regIndex, val);
+	}
+	else if (argc == 4) {
+		regIndex = strtoul(argv[2], NULL,16);
+		val = (__u16)strtoul(argv[3], NULL,16);
+		ret = writePhyReg(ifname, regIndex, val);
+		if (ret < 0) {
+			printf("writePhyReg fail: ifname %s, reg index %x, val %x \n", ifname, regIndex, val);
+			return -1;
+		}
+	}
+	else {
+		usage(argv[0]);
+		return -1;
 	}
 	
 	return 0;
