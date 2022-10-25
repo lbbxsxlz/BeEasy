@@ -5,6 +5,14 @@
 
 [接受以太网帧并打印内容](ethernetDemo/recvEther.c)
 
+## Ethernet phy register read and write
+[以太网Phy寄存器操作](mii/mii.c)
+```
+mii $ifname
+mii $ifname $reg
+mii $ifname $reg $val
+```
+
 ## 以太网帧文件传输
 [文件传送](fileTransmit/README)
 文件传输功能已经实现，为了保证数据的完整性，每发送一帧以太网帧均需要回复，导致文件传输的速率无法提升。
