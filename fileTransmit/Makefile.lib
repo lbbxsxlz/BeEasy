@@ -1,0 +1,41 @@
+#******************************************************************************
+# * Makefile
+# *
+# * Author : lbbxsxlz <lbbxsxlz@gmail.com>
+# * Version: V2.0
+# * Support Multi-files compiling
+# ******************************************************************************
+plat := x86_64
+PWD:=$(shell pwd)
+
+CC := gcc
+AR := ar
+CFLAGS := -Wall -g -O2
+TARGETS := fileTransmit
+LIB := libethernet.a
+
+ifeq ($(plat), hi3559av100)
+CC = aarch64-himix100v630-linux-gcc
+AR = aarch64-himix100v630-linux-ar
+else ifeq ($(plat), hi3516dv300)
+CC = arm-himix200v002-linux-gcc
+AR = arm-himix200v002-linux-ar
+else ifeq ($(plat), hi3519av100)
+CC = arm-himix200-linux-gcc
+AR = arm-himix200-linux-ar
+endif
+
+all: $(TARGETS) $(LIB)
+
+$(TARGETS): fileTransmit.o $(LIB)
+	$(CC) $(CFLAGS) -o $@ fileTransmit.o -L. -lethernet
+
+$(LIB):ethernet.o
+	$(AR) rcs $@ $?
+
+clean:
+	rm -f *.o $(LIB) $(TARGETS)
+
+%.o: %.c %.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+	
