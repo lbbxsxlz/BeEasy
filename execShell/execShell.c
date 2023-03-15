@@ -9,9 +9,9 @@
 #include <signal.h>
 
 /* refer to glibc sysdeps/posix/system.c: __libc_system/do_system */
-int exec_shell(const char *cmd)
+int run_shell(const char *cmd)
 {
-        int status = 0;
+        int ret = 0;
         pid_t pid;
         struct sigaction sa;
         struct sigaction sig_int, sig_quit;
@@ -38,7 +38,7 @@ int exec_shell(const char *cmd)
 
         pid = vfork();
         if (pid < 0) {
-                status = -1;
+                ret = -1;
         } else if (pid == 0) {
                 /* restore the signal action in child process */
                 sigaction(SIGINT, &sig_int, (struct sigaction *)NULL);
@@ -51,8 +51,8 @@ int exec_shell(const char *cmd)
                 /* return exec error */
                 _exit(127);
         } else {
-                if (waitpid(pid, &status, 0) != pid) {
-                        status = -1;
+                if (waitpid(pid, &ret, 0) != pid) {
+                        ret = -1;
                 }
         }
 
@@ -61,10 +61,10 @@ int exec_shell(const char *cmd)
         sigaction(SIGQUIT, &sig_quit, (struct sigaction *)NULL);
         sigprocmask(SIG_SETMASK, &omask, (sigset_t *)NULL);
 
-        return status;
+        return ret;
 }
 
-int exec_shell_with_result(const char *cmd, char *buf, int size)
+int run_shell_with_result(const char *cmd, char *buf, int size)
 {
         FILE *fp;
 
@@ -86,13 +86,19 @@ int exec_shell_with_result(const char *cmd, char *buf, int size)
 
 int main(int argc, char *argv[])
 {
-        int ret = exec_shell("cat /etc/passwd > ./passwd");
-
         char buf[10];
-
-        ret = exec_shell_with_result("cat /etc/passwd | grep root | wc -l", buf, sizeof(buf));
+        int ret = 0;
+        
+        ret = run_shell("cat /etc/passwd > ./passwd");
         if (ret < 0) {
-                printf("Failed to run_shell_with_resut.\n");
+                printf("Failed to run shell:%s\n", strerror(errno));
+                return ret;
+        }
+
+        ret = run_shell_with_result("cat /etc/passwd | grep root | wc -l", buf, sizeof(buf));
+        if (ret < 0) {
+                printf("Failed to run_shell_with_resut!\n");
+                return ret;
         }
 
         printf("result:%d\n", atoi(buf));
