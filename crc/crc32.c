@@ -52,16 +52,14 @@ static uint32_t crc32_table(uint8_t *buf, uint16_t length)
  * Alias:   CRC_32/ADCCP
  * Use:  WinRAR,ect.
  */
-uint32_t crc32(uint8_t *data, uint16_t length)
+uint32_t crc32(uint8_t *data, uint16_t len)
 {
         uint8_t i;
         uint32_t crc = 0xffffffff;
-        while(length--)
-        {
+        while (len--) {
                 crc ^= *data;
                 data++;
-                for (i = 0; i < 8; ++i)
-                {
+                for (i = 0; i < 8; ++i) {
                         if (crc & 1) {
                                 /* 0xEDB88320= reverse 0x04C11DB7 */
                                 crc = (crc >> 1) ^ 0xEDB88320;
@@ -82,20 +80,19 @@ uint32_t crc32(uint8_t *data, uint16_t length)
  * Xorout:  0x0000000
  * Note:
 */
-uint32_t crc32_mpeg_2(uint8_t *data, uint16_t length)
+uint32_t crc32_mpeg_2(uint8_t *data, uint16_t len)
 {
         uint8_t i;
         uint32_t crc = 0xffffffff;
-        while(length--)
-        {
+        while (len--) {
                 crc ^=(uint32_t)(*data)<<24;
                 data++;
-                for (i = 0; i < 8; ++i)
-                {
-                        if ( crc & 0x80000000 )
+                for (i = 0; i < 8; ++i) {
+                        if (crc & 0x80000000) {
                                 crc = (crc << 1) ^ 0x04C11DB7;
-                        else
+                        } else {
                                 crc <<= 1;
+                        }        
                 }
         }
         return crc;
