@@ -17,6 +17,54 @@ static int write_file(int rd, const char *file)
 	return 0;
 }
 
+static int copy_file(const char *dst, const char *src)
+{
+	int ret = 0;
+	FILE *fdst = NULL;
+	FILE *fsrc = NULL;
+
+	uint8_t tempbuf[4096] = {0};
+	size_t readBytes = -1;
+	size_t writeBytes = -1;
+
+	fdst = fopen(dst, "wb");
+	if (fdst == NULL) {
+		fprintf(stderr, "fopen file %s fail %s!\n", dst, strerror(errno));
+		return -1;
+	}
+
+	fsrc = fopen(src, "rb");
+	if (fsrc == NULL) {
+		fprintf(stderr, "fopen file %s fail %s!\n", src, strerror(errno));
+		ret = -1;
+		goto quit;
+	}
+
+	while (!feof(fsrc)) {
+		readBytes = fread(tempbuf, 1, sizeof(tempbuf) - 1, fsrc);
+
+		writeBytes = fwrite(tempbuf, 1, readBytes, fdst);
+		if (writeBytes != readBytes) {
+			fprintf(stderr, "Failed to write file %s!\n", strerror(errno));
+			ret = -1;
+			goto quit;
+		}
+	}
+
+	fflush(fdst);
+
+quit:
+	if (fdst) {
+		fclose(fdst);
+	}
+
+	if (fsrc) {
+		fclose(fsrc);
+	}
+
+	return ret;
+}
+
 static void *mmap_file(const char *filename, size_t *size)
 {
 	int fd = -1;
