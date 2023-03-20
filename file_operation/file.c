@@ -109,3 +109,44 @@ static int unmap_file(void *addr, size_t length)
 	addr = NULL;
 	return 0;
 }
+
+long long getDirSize(char* path)
+{
+	DIR *dir;
+	struct dirent *dirp;
+	struct stat f_stat;
+	char filename[PATH_MAX];
+	long long size = 0;
+	
+	dir = opendir(path);
+	if (dir == NULL) {
+		printf("open dir %s fail: %s, errno = %d \n", path, strerror(errno), errno);
+		return -1;
+	}	
+	
+	while((dirp = readdir(dir))) {
+		if (strcmp(dirp->d_name, ".") == 0 || strcmp(dirp->d_name, "..") == 0) {
+			continue;
+		}
+		
+		memset(filename, 0, sizeof(filename));
+		sprintf(filename, "%s/%s", path, dirp->d_name);
+		memset(&f_stat, 0, sizeof(stat));
+		if(stat(filename, &f_stat) < 0) {
+			printf("get file attr fail: %s, errno = %d \n", strerror(errno), errno);
+			closedir(dir);
+			return -1;
+		}
+		
+		if (S_ISDIR(f_stat.st_mode)) {
+			size += getDirSize(filename);
+		} else {
+			//printf("file name : %s ,file_size = %ld \n", filename, f_stat.st_size);
+			size += f_stat.st_size;
+		}	
+	}
+	
+	closedir(dir);
+	return size;
+}
+
