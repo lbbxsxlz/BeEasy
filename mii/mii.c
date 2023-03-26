@@ -17,7 +17,7 @@
 #define PHY_ID_HIGH_WORD    2
 #define PHY_ID_LOW_WORD     3
 	
-static int readPhyReg(const char* ifname, __u16 regNum, __u16* val)
+static int readPhyReg(const char *ifname, __u16 regNum, __u16 *val)
 {
 	struct mii_ioctl_data *mii = NULL;
 	struct ifreq ifr;
@@ -49,7 +49,7 @@ static int readPhyReg(const char* ifname, __u16 regNum, __u16* val)
 		return -1;
 	}
 
-	mii = (struct mii_ioctl_data*)&ifr.ifr_data;
+	mii = (struct mii_ioctl_data *)&ifr.ifr_data;
 	mii->reg_num = regNum;
 
 	ret = ioctl(sockfd, SIOCGMIIREG, &ifr);
@@ -65,7 +65,7 @@ static int readPhyReg(const char* ifname, __u16 regNum, __u16* val)
 	return 0;
 }
 
-static int writePhyReg(const char* ifname, __u16 regNum, __u16 val)
+static int writePhyReg(const char *ifname, __u16 regNum, __u16 val)
 {
 	struct mii_ioctl_data *mii = NULL;
 	struct ifreq ifr;
@@ -97,7 +97,7 @@ static int writePhyReg(const char* ifname, __u16 regNum, __u16 val)
 		return -1;
 	}
 
-	mii = (struct mii_ioctl_data*)&ifr.ifr_data;
+	mii = (struct mii_ioctl_data *)&ifr.ifr_data;
 	mii->reg_num = regNum;
 	mii->val_in = val;
 
@@ -114,7 +114,7 @@ static int writePhyReg(const char* ifname, __u16 regNum, __u16 val)
 }
 
 
-static int getPhyID(const char* ifname, uint32_t* id)
+static int getPhyID(const char *ifname, uint32_t *id)
 {
 	__u16 reg2;
 	__u16 reg3;

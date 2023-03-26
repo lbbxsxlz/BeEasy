@@ -1,3 +1,10 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <dirent.h>
+
 static int write_file(int rd, const char *file)
 {
 	char buf[1024];
@@ -110,7 +117,7 @@ static int unmap_file(void *addr, size_t length)
 	return 0;
 }
 
-long long getDirSize(char* path)
+long long getDirSize(char *path)
 {
 	DIR *dir;
 	struct dirent *dirp;
@@ -148,5 +155,48 @@ long long getDirSize(char* path)
 	
 	closedir(dir);
 	return size;
+}
+
+void deleteFileAndDir(char *path)
+{
+	DIR *dir;
+	struct dirent *dirp;
+	struct stat f_stat;
+	char filename[PATH_MAX];
+	
+	dir = opendir(path);
+	if (dir == NULL) {
+		printf("open dir %s fail: %s, errno = %d \n", path, strerror(errno), errno);
+		return;
+	}	
+	
+	while(dirp = readdir(dir)) {
+		if (strcmp(dirp->d_name, ".") == 0 || strcmp(dirp->d_name, "..") == 0) {
+			continue;
+		}
+		
+		memset(filename, 0, sizeof(filename));
+		sprintf(filename, "%s/%s", path, dirp->d_name);
+		memset(&f_stat, 0, sizeof(stat));
+		if(stat(filename, &f_stat) < 0) {
+			printf("get file attr fail: %s, errno = %d \n", strerror(errno), errno);
+			closedir(dir);
+			return;
+		}
+		
+		if(S_ISDIR(f_stat.st_mode)) {
+			deleteFileAndDir(filename);
+			rmdir(filename);
+		} else {
+			remove(filename);
+		}	
+	}
+	
+	closedir(dir);
+}
+
+int main(int argc, char *argv[])
+{
+	
 }
 
