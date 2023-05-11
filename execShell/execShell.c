@@ -9,7 +9,7 @@
 #include <signal.h>
 
 /* refer to glibc sysdeps/posix/system.c: __libc_system/do_system */
-int run_shell(const char *cmd)
+int exec_shell(const char *cmd)
 {
         int ret = 0;
         pid_t pid;
@@ -64,7 +64,7 @@ int run_shell(const char *cmd)
         return ret;
 }
 
-int run_shell_with_result(const char *cmd, char *buf, int size)
+int exec_shell_with_result(const char *cmd, char *buf, int size)
 {
         FILE *fp;
 
@@ -89,13 +89,13 @@ int main(int argc, char *argv[])
         char buf[10];
         int ret = 0;
         
-        ret = run_shell("cat /etc/passwd > ./passwd");
+        ret = exec_shell("cat /etc/passwd > ./passwd");
         if (ret < 0) {
                 printf("Failed to run shell:%s\n", strerror(errno));
                 return ret;
         }
 
-        ret = run_shell_with_result("cat /etc/passwd | grep root | wc -l", buf, sizeof(buf));
+        ret = exec_shell_with_result("cat /etc/passwd | grep root | wc -l", buf, sizeof(buf));
         if (ret < 0) {
                 printf("Failed to run_shell_with_resut!\n");
                 return ret;
