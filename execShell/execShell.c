@@ -73,7 +73,9 @@ int exec_shell_with_result(const char *cmd, char *buf, int size)
                 printf("Failed to popen: %s\n", strerror(errno));
                 return -1;
         }
-
+        
+        /* get tha whole output */
+        //fread(buf, 1, size - 1, fp);
         if (fgets(buf, size - 1, fp) == NULL) {
                 printf("Failed to get the results: %s\n", strerror(errno));
                 pclose(fp);
