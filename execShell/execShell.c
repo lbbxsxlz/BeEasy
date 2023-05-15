@@ -76,6 +76,19 @@ int exec_shell_with_result(const char *cmd, char *buf, int size)
         
         /* get tha whole output */
         //fread(buf, 1, size - 1, fp);
+        
+        /* The methods to get the file stream's size are invalid in pipe stream */
+        /* method 1 */
+        /*
+         * fseek(fp, 0, SEEK_END);
+         * len = ftell(fp)
+         * rewind(fp)
+         */
+        /* method 2 */
+        /*
+         * fstat(fileno(fp), &fp_stat)
+         * len = fp_stat.st_size;
+         */
         if (fgets(buf, size - 1, fp) == NULL) {
                 printf("Failed to get the results: %s\n", strerror(errno));
                 pclose(fp);
