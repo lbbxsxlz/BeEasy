@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
 
 typedef int (*test_func_t) (int argc, char *argv[]);
 
@@ -15,7 +16,7 @@ static int example3(int argc, char *argv[]);
 static int example4(int argc, char *argv[]);
 static int example5(int argc, char *argv[]);
 static int example6(int argc, char *argv[]);
-static void usage(const char *prog);
+
 
 test_dispatch_t test_dispatch[] = {
 	{"test1", example1},
@@ -28,41 +29,61 @@ test_dispatch_t test_dispatch[] = {
 
 static int example1(int argc, char *argv[])
 {
-  printf("example1!\n");
+	printf("example1!\n");
+	return 0;
 }
 
 static int example2(int argc, char *argv[])
 {
-  printf("example2!\n");
+	printf("example2!\n");
+	return 0;
 }
 
 static int example3(int argc, char *argv[])
 {
-  printf("example3!\n");
-}
-static int example4(int argc, char *argv[])
-{
-  printf("example4!\n");
-}
-static int example5(int argc, char *argv[])
-{
-  printf("example5!\n");
-}
-static int example6(int argc, char *argv[])
-{
-  printf("example6!\n");
+	printf("example3!\n");
+	return 0;
 }
 
+static int example4(int argc, char *argv[])
+{
+	printf("example4!\n");
+	return 0;
+}
+
+static int example5(int argc, char *argv[])
+{
+	printf("example5!\n");
+	return 0;
+}
+
+static int example6(int argc, char *argv[])
+{
+	printf("example6!\n");
+	return 0;
+}
 
 int main(int argc, char **argv)
 {
-  int i;
-  
-  for (i = 0; i < sizeof(test_dispatch) / sizeof(test_dispatch[0]); i++) {
-      if (strncmp(argv[1], test_dispatch[i].test_name, sizeof(test_dispatch[i].test_name) - 1) {
-        test_dispatch[i].func;
-      }
-  }
-          
-  return 0;
+	int i;
+	int ret;
+ 
+	if (argc < 2) {
+		printf("invalid arguments!\n");
+		return -1;
+	}
+
+	for (i = 0; i < sizeof(test_dispatch) / sizeof(test_dispatch[0]); i++) {
+		if (strncmp(argv[1], test_dispatch[i].test_name, sizeof(test_dispatch[i].test_name) - 1) == 0) {
+			ret = test_dispatch[i].func(argc - 1, argv + 1);
+			break;
+		}
+	}
+
+	if (i == sizeof(test_dispatch) / sizeof(test_dispatch[0])) {
+		printf("invalid arguments!\n");
+		return -1;
+	}
+
+	return 0;
 }
