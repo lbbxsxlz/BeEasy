@@ -8,12 +8,9 @@ KDIR = /home/hisi/Linux-4.9.37_HI3559AV100ES/src
 endif
 
 CC = $(cross)gcc
+PWD = $(shell pwd)
 
-ifneq ($(KERNELRELEASE),)
-obj-m := spinLockTest.o 
-else
-	PWD := $(shell pwd)
-endif
+obj-m = spinLockTest.o 
 
 all:default
 default:
