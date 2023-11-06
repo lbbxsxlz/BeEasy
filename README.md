@@ -36,3 +36,9 @@ TODO：提升文件传输的效率
 
 ## 文件路径遍历，删除目录中最大的文件
 [workthrough](walkthrough/walkthrougthPath.c)
+
+## 程序调用shell脚本，返回shell输出结果或只关注执行结果
+[execshell](execShell/execShell.c)
+
+## 遍历目录，按条件删除文件或目录
+[walkthrough](walkthrough/walkthroughPath.c)
