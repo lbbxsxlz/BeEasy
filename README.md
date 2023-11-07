@@ -42,3 +42,9 @@ TODO：提升文件传输的效率
 
 ## 遍历目录，按条件删除文件或目录
 [walkthrough](walkthrough/walkthroughPath.c)
+
+## 将16进制的字符串转成二进制数据
+[str2hex](str2hex/str2hex.c)
+
+## 使用realloc再次分配内存
+[realloc](realloc/realloc_test.c)
