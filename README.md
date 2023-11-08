@@ -1,4 +1,4 @@
-# 实现一个工具集使定位问题或解决问题更简单快捷。
+# 收集并整理日常使用的工具使定位问题或解决问题更简单快捷。
 
 ## EthernetDemo
 [构建以太网帧并发送](ethernetDemo/sendEther.c)
@@ -48,3 +48,9 @@ TODO：提升文件传输的效率
 
 ## 使用realloc再次分配内存
 [realloc](realloc/realloc_test.c)
+
+## CRC校验算法
+[crc](crc/crc32.c)
+
+## 常用的文件操作
+[file operation](file_operation/file.c)
