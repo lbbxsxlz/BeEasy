@@ -54,3 +54,10 @@ TODO：提升文件传输的效率
 
 ## 常用的文件操作
 [file operation](file_operation/file.c)
+
+## linux 可执行文件格式elf format demo
+[elfRead](elfRead/elf32bit.c)
+[elfRead](elfRead/elf64.c)
+
+## C语言位域操作
+[bitField](bitField/bitField.c)
