@@ -43,6 +43,12 @@ TODO：提升文件传输的效率
 ## windows系统上getopt的实现
 [getopt](getopt4windows/README.md)
 
+## cJson demo, 查找关键字中的某个键值
+[json_read](jsonRead/jsonRead.c)
+```
+jsonRead $fileName String
+```
+
 ## 用户态MMIO物理地址映射到虚拟地址
 [mmio map](memPhy2Virt/README.md)
 
@@ -50,17 +56,8 @@ TODO：提升文件传输的效率
 [server](sockets_tcp/server.c)
 [client](sockets_tcp/client.c)
 
-## cJson demo, 查找关键字中的某个键值
-[json_read](jsonRead/jsonRead.c)
-
 ## SpinLock Test 自旋锁demo用于验证CPU hang
 [Spin_Lock](spinLockTest/spinLockTest.c)
-
-## 文件路径遍历，删除目录中最大的文件
-[workthrough](walkthrough/walkthrougthPath.c)
-
-## 遍历目录，按条件删除文件或目录
-[walkthrough](walkthrough/walkthroughPath.c)
 
 ## 将16进制的字符串转成二进制数据
 [str2hex](str2hex/str2hex.c)
@@ -71,3 +68,9 @@ TODO：提升文件传输的效率
 ## 如何使用Makefile编译静态库、动态库以及内核模块
 [static and dynamic library](Makefile/library.mk)
 [kernel module](Makefile/kernel_module.mk)
+
+## 文件路径遍历，删除目录中最大的文件
+[workthrough](walkthrough/walkthrougthPath.c)
+
+## 遍历目录，按条件删除文件或目录
+[walkthrough](walkthrough/walkthroughPath.c)

@@ -5,38 +5,39 @@
 
 #define PATH_MAX 256
 
-void usage()
+void usage(const char *prog)
 {
-	printf("usage: jsonRead inputfile key\n");
+	printf("usage: jsonRead inputfile keyString. \n");
+	printf("%s $filename $string.\n", prog);
 }
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
 	char inputName[PATH_MAX] = {0};
 	char findstr[256] = {0};
 	FILE* Fp = NULL;
 	int Ret = 0;
 	unsigned int ReadLenth = 0;
-	char *		 DataBuf = NULL;
-	char *		 Prandsalt = NULL;
+	char *DataBuf = NULL;
+	char *Prandsalt = NULL;
 	cJSON *cjson = NULL, *root_object = NULL;
-	cJSON *str_in_file = NULL, *enableInfo = NULL;	
-	
+	cJSON *str_in_file = NULL, *enableInfo = NULL;
+
 	if (argc < 3) {
-		usage();
+		usage(argv[0]);
 		exit(-1);
 	}
 
 	strncpy(inputName, argv[1], sizeof(inputName) - 1);
 	strncpy(findstr, argv[2], sizeof(findstr) - 1);
-	
+
 	Fp = fopen(inputName, "r");
 	if(NULL == Fp)
 	{
 		printf("fopen %s fail \n", inputName);
 		return -1;
 	}
-	
+
 	Ret  = fseek(Fp, 0, SEEK_END);
 	if (Ret)
 	{
@@ -44,15 +45,15 @@ int main(int argc, char** argv)
 		Ret = -1;
 		goto quit;
 	}
-	
+
 	ReadLenth = ftell(Fp);
 	if (ReadLenth == -1L)
 	{
 		printf("get file %s size fail \n", inputName);
 		Ret = -1;
-		goto quit;		
+		goto quit;
 	}
-	
+
 	DataBuf = (char *)malloc(ReadLenth+1);
 	if (DataBuf == NULL)
 	{
@@ -60,17 +61,17 @@ int main(int argc, char** argv)
 		Ret = -1;
 		goto quit;
 	}
-	
+
 	memset(DataBuf, 0, ReadLenth+1);
-	
+
 	Ret = fseek(Fp, 0, SEEK_SET);
 	if (Ret)
 	{
 		printf("SEEK file's start FAILED!\n");
 		Ret = -1;
-		goto quit;		
+		goto quit;
 	}
-	
+
 	Ret = fread(DataBuf, 1, ReadLenth, Fp);
 	if (Ret != ReadLenth)
 	{
@@ -97,7 +98,7 @@ int main(int argc, char** argv)
 			printf("the config file is damaged! \n");
 			goto quit;
 		}
-		
+
 		str_in_file = cJSON_GetObjectItemCaseSensitive(root_object, findstr);
 		if (NULL == str_in_file)
 		{
@@ -105,7 +106,7 @@ int main(int argc, char** argv)
 			Ret = -1;
 			goto quit;
 		}
-		
+
 		printf("%s \n", cJSON_Print(str_in_file));
 
 		enableInfo = cJSON_GetObjectItemCaseSensitive(str_in_file, "Enable");
@@ -115,21 +116,21 @@ int main(int argc, char** argv)
 			Ret = -1;
 			goto quit;
 		}
-		
+
 		Ret = enableInfo->type;
 		//printf("%d\n", enableInfo->type);
 	}
 
 quit:
-	if (Fp) 
+	if (Fp)
 		fclose(Fp);
-		
+
 	if (cjson)
 	{
 		cJSON_Delete(cjson);
 	}
-	
-	if (DataBuf) 
+
+	if (DataBuf)
 	{
 		free(DataBuf);
 		DataBuf = NULL;
