@@ -8,7 +8,7 @@
 void usage(const char *prog)
 {
 	printf("usage: jsonRead inputfile keyString. \n");
-	printf("%s $filename $string.\n", prog);
+	printf("e.p.: %s $filename $string.\n", prog);
 }
 
 int main(int argc, char **argv)

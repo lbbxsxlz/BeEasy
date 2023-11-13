@@ -16,7 +16,7 @@
 #define STATUS_REG          1
 #define PHY_ID_HIGH_WORD    2
 #define PHY_ID_LOW_WORD     3
-	
+
 static int readPhyReg(const char *ifname, __u16 regNum, __u16 *val)
 {
 	struct mii_ioctl_data *mii = NULL;
@@ -108,7 +108,7 @@ static int writePhyReg(const char *ifname, __u16 regNum, __u16 val)
 		close(sockfd);
 		return -1;
 	}
-	
+
 	close(sockfd);
 	return 0;
 }
@@ -137,7 +137,7 @@ static int getPhyID(const char *ifname, uint32_t *id)
 	}
 
 	*id = reg2 << 16 | reg3;
-	
+
 	printf("reg2 = 0x%x, reg3 = 0x%x \n", reg2, reg3);
 
 	return 0;
@@ -152,7 +152,7 @@ static void usage(char *path)
 }
 
 int main(int argc, char *argv[])
-{	
+{
 	/* argv1 ifname, argv2 reg */
 	char ifname[10] = {0};
 	__u16 regIndex;
@@ -162,14 +162,18 @@ int main(int argc, char *argv[])
 		usage(argv[0]);
 		return -1;
 	}
-	
+
 	strncpy(ifname, argv[1], sizeof(ifname) - 1);
 	int ret;
 
 	if (argc == 2) {
 		uint32_t id;
 		ret = getPhyID(ifname, &id);
-		printf("id = 0x%x \n", id); 
+		if (ret < 0) {
+			printf("Fail to get Phy ID!\n");
+			return -1;
+		}
+		printf("id = 0x%x \n", id);
 	} else if (argc == 3) {
 		regIndex = (__u16)strtoul(argv[2], NULL,16);
 		ret = readPhyReg(ifname, regIndex, &val);
@@ -192,6 +196,6 @@ int main(int argc, char *argv[])
 		usage(argv[0]);
 		return -1;
 	}
-	
+
 	return 0;
 }
