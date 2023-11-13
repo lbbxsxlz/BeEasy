@@ -48,9 +48,14 @@ TODO：提升文件传输的效率
 ```
 jsonRead $fileName String
 ```
+more detail please refer the [doc](jsonRead/README.md)
 
 ## 用户态MMIO物理地址映射到虚拟地址
 [mmio map](memPhy2Virt/README.md)
+
+
+## 使用realloc再次分配内存
+[realloc](realloc/realloc_test.c)
 
 ## Window系统socket创建简单的基于TCP的C/S demo
 [server](sockets_tcp/server.c)
@@ -59,15 +64,12 @@ jsonRead $fileName String
 ## SpinLock Test 自旋锁demo用于验证CPU hang
 [Spin_Lock](spinLockTest/spinLockTest.c)
 
-## 将16进制的字符串转成二进制数据
-[str2hex](str2hex/str2hex.c)
-
-## 使用realloc再次分配内存
-[realloc](realloc/realloc_test.c)
-
 ## 如何使用Makefile编译静态库、动态库以及内核模块
 [static and dynamic library](Makefile/library.mk)
 [kernel module](Makefile/kernel_module.mk)
+
+## 将16进制的字符串转成二进制数据
+[str2hex](str2hex/str2hex.c)
 
 ## 文件路径遍历，删除目录中最大的文件
 [workthrough](walkthrough/walkthrougthPath.c)
