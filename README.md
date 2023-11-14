@@ -51,8 +51,12 @@ jsonRead $fileName String
 more detail please refer the [doc](jsonRead/README.md)
 
 ## 用户态MMIO物理地址映射到虚拟地址
-[mmio map](memPhy2Virt/README.md)
-
+The below is the usage, more detail please refer the [doc](memPhy2Virt/README.md)
+```
+ memPhy2Virt -r -a $address
+ memPhy2Virt -s -a $address -l $length
+ memPhy2Virt -w -a $address -v $value
+ ```
 
 ## 使用realloc再次分配内存
 [realloc](realloc/realloc_test.c)
@@ -71,8 +75,8 @@ more detail please refer the [doc](jsonRead/README.md)
 ## 将16进制的字符串转成二进制数据
 [str2hex](str2hex/str2hex.c)
 
-## 文件路径遍历，删除目录中最大的文件
-[workthrough](walkthrough/walkthrougthPath.c)
-
 ## 遍历目录，按条件删除文件或目录
 [walkthrough](walkthrough/walkthroughPath.c)
+
+## 文件路径遍历，删除目录中最大的文件
+[workthrough](walkthrough/walkthrougthPath.c)
