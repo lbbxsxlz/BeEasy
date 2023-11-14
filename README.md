@@ -77,6 +77,3 @@ The below is the usage, more detail please refer the [doc](memPhy2Virt/README.md
 
 ## 遍历目录，按条件删除文件或目录
 [walkthrough](walkthrough/walkthroughPath.c)
-
-## 文件路径遍历，删除目录中最大的文件
-[workthrough](walkthrough/walkthrougthPath.c)
