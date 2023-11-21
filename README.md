@@ -79,6 +79,11 @@ The below is the usage, more detail please refer the [doc](memPhy2Virt/README.md
 ```
 make -f sharelib.mk
 ```
+```
+mkdir -p lib
+cp library.mk lib/
+make -C lib
+```
 
 ## 将16进制的字符串转成二进制数据
 [str2hex](str2hex/str2hex.c)
