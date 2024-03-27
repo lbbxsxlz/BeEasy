@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
 {
 	char *s = "1b5050508af890ef50";
 	uint8_t buf[10] = {0};
-	size_t len = 0;
+	size_t len = sizeof(buf);
 	printf("%s\n", s);
 	str_to_hex(s, len, buf);
 	for (int n = 0; n < len / 2; n++)
