@@ -3,7 +3,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <curl/curl.h>
-#include "cJSON.h"
 
 /**
   CC=arm-linux-gnueabihf-gcc ./configure --host=arm-linux-gnueabihf --prefix=/opt/workspace/opensource/arm-linux-gnueabihf/curl-8.5.0 --enable-static --enable-shared --with-openssl
@@ -28,7 +27,7 @@ static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *use
     printf("real size = %ld\n", real_size);
     char *ptr = realloc(mem->memory, mem->size + real_size + 1);
     if (ptr == NULL) {
-        fprintf(stderr, "Not enough memory (realloc returned NULL)\n");
+        printf("Not enough memory!\n");
         return 0;
     }
 
@@ -49,8 +48,7 @@ int main(void) {
     struct MemoryStruct chunk;
     chunk.memory = malloc(1);
     chunk.size = 0;
-    
-    // 初始化libcurl
+
     curl_global_init(CURL_GLOBAL_ALL);
     curl = curl_easy_init();
 
@@ -59,18 +57,15 @@ int main(void) {
         headers = curl_slist_append(headers, "Content-Type: application/json");
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
         curl_easy_setopt(curl, CURLOPT_URL, "http://myexample.com/api/v1/security/login");
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "{\"username\":\"root\",\"password\":\"admin123\",\"provider\":\"db\"}");
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "{\"username\":\"root\",\"password\":\"admin\",\"provider\":\"db\"}");
 
-        // 设置接收响应数据的回调函数
         //curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
         //curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)response);
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
 
-        // 执行HTTP POST请求
         res = curl_easy_perform(curl);
 
-        // 检查错误
         if(res != CURLE_OK) {
             fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
         } else {
@@ -81,7 +76,6 @@ int main(void) {
             }
         }
 
-        // 清理
         curl_easy_cleanup(curl);
         curl_slist_free_all(headers);
     }
