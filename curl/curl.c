@@ -35,7 +35,7 @@ static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *use
     mem->memory = ptr;
     memcpy(&(mem->memory[mem->size]), contents, real_size);
     mem->size += real_size;
-    mem->memory[mem->size] = 0; // 确保字符串以NULL结尾
+    mem->memory[mem->size] = 0;
 
     return real_size;
 }
@@ -58,8 +58,8 @@ int main(void) {
         struct curl_slist *headers = NULL;
         headers = curl_slist_append(headers, "Content-Type: application/json");
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-        curl_easy_setopt(curl, CURLOPT_URL, "http://10.239.146.249:1234/api/v1/security/login");
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "{\"username\":\"root\",\"password\":\"intel\",\"provider\":\"db\"}");
+        curl_easy_setopt(curl, CURLOPT_URL, "http://myexample.com/api/v1/security/login");
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "{\"username\":\"root\",\"password\":\"admin123\",\"provider\":\"db\"}");
 
         // 设置接收响应数据的回调函数
         //curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
